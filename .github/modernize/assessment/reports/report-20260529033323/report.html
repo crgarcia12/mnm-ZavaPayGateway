@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Assessment - ZavaPayGateway</title>
+<style>
+:root {
+  --bg-primary: #ffffff;
+  --bg-card: #f8f9fa;
+  --bg-page: #f0f1f3;
+  --text-primary: #24292f;
+  --text-secondary: #57606a;
+  --text-muted: #6b7280;
+  --border-color: #d0d7de;
+  --border-light: #e1e4e8;
+  --link-color: #2563eb;
+  --color-mandatory: #E3008C;
+  --color-potential: #637CEF;
+  --color-optional: #A19F9D;
+  --font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --font-mono: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-family); font-size: 13px; color: var(--text-primary); background: var(--bg-primary); line-height: 1.5; margin: 0; padding: 0; }
+a { color: var(--link-color); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Page layout ───────────────────────────────────────────── */
+.main { margin: 0; padding: 24px 32px; background: var(--bg-primary); }
+.back-link { color: var(--text-muted); font-size: 13px; margin-bottom: 16px; display: block; }
+h1 { font-weight: 600; font-size: 20px; color: var(--text-primary); margin-bottom: 20px; }
+
+/* ── Report cards (matches VS Code .vscode-report-card) ──── */
+.report-card { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 4px; padding: 12px; margin-bottom: 20px; }
+.report-card h2 { font-size: 14px; font-weight: 600; margin: 0; color: var(--text-primary); }
+.report-card-body { margin-top: 16px; }
+
+/* ── Component Information (two-column) ────────────────── */
+.app-info-container { display: flex; gap: 8px; flex-wrap: wrap; }
+.app-info-column { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 8px; }
+.app-info-row { display: flex; align-items: baseline; }
+.app-info-label { width: 136px; flex-shrink: 0; font-weight: 600; color: var(--text-primary); }
+.app-info-value { flex: 1; color: var(--text-primary); }
+
+/* ── Issue Summary (pie charts + legend) ─────────────────── */
+.cards-container { display: flex; align-items: stretch; gap: 20px; flex-wrap: wrap; }
+.issue-summary-card { flex: 2; }
+.domain-summary-container { display: flex; flex-wrap: wrap; gap: 20px; justify-content: space-around; }
+.domain-summary-item { flex: 1; min-width: 120px; text-align: center; padding: 0 16px; border-right: 1px solid var(--border-light); }
+.domain-summary-item:last-child { border-right: none; }
+.domain-summary-item h3 { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-top: 8px; }
+.domain-summary-item .count { font-size: 12px; color: var(--text-secondary); }
+.criticality-legend { display: flex; flex-wrap: wrap; gap: 15px; padding-top: 12px; justify-content: center; }
+.criticality-legend .legend-item { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-secondary); }
+.legend-swatch { display: inline-block; width: 1em; height: 1em; border-radius: 2px; }
+
+/* ── Issue list tables ───────────────────────────────────── */
+.issue-section { margin-top: 20px; }
+.issue-section h2 { font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+.issue-table { width: 100%; border-collapse: collapse; table-layout: fixed; min-width: 600px; }
+.issue-table th { text-align: left; text-transform: uppercase; font-weight: 600; font-size: calc(13px * 0.875); padding: 6px 8px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); color: var(--text-secondary); position: sticky; top: 0; z-index: 1; }
+.issue-table td { padding: 12px 8px; border-bottom: 1px solid var(--border-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+.col-issue { width: 55%; }
+.col-criticality { width: 25%; }
+.col-storypoint { width: 20%; }
+
+/* ── Target dropdown ─────────────────────────────────────── */
+.target-select-container { margin: 4px 0 16px 0; display: flex; align-items: center; gap: 8px; }
+.target-select-container label { font-weight: 600; color: var(--text-primary); font-size: 14px; }
+.target-select-container select { font-family: var(--font-family); font-size: 13px; padding: 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-primary); color: var(--text-primary); cursor: pointer; }
+
+/* ── Filter bar ──────────────────────────────────────────── */
+.filter-bar { display: flex; flex-wrap: wrap; gap: 16px; margin: 16px 0 8px 0; align-items: center; }
+.multi-select { position: relative; display: inline-block; min-width: 140px; }
+.multi-select-btn { font-family: var(--font-family); font-size: 13px; padding: 4px 24px 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; background: var(--bg-primary); color: var(--text-primary); cursor: pointer; width: 100%; text-align: left; position: relative; white-space: nowrap; }
+.multi-select-btn::after { content: '\25BE'; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--text-secondary); }
+.multi-select-dropdown { display: none; position: absolute; top: 100%; left: 0; min-width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 100; margin-top: 2px; }
+.multi-select.open .multi-select-dropdown { display: block; }
+.multi-select-option { display: flex; align-items: center; gap: 6px; padding: 5px 10px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+.multi-select-option:hover { background: var(--bg-secondary); }
+.multi-select-option input[type=checkbox] { margin: 0; cursor: pointer; }
+.clear-filters { font-size: 12px; color: var(--link-color); cursor: pointer; margin-left: 4px; }
+
+/* ── Criticality labels (colored square + text) ──────────── */
+.crit-label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; white-space: nowrap; }
+.crit-square { display: inline-block; width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.crit-square-mandatory { background: var(--color-mandatory); }
+.crit-square-potential { background: var(--color-potential); }
+.crit-square-optional { background: var(--color-optional); }
+
+/* ── Expandable rows ─────────────────────────────────────── */
+.expand-btn { background: none; border: none; cursor: pointer; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 11px; transition: transform 0.15s; padding: 0; vertical-align: middle; flex-shrink: 0; }
+.expand-btn.open { transform: rotate(90deg); }
+.issue-title-cell { display: flex; align-items: center; gap: 4px; }
+.detail-row td { padding: 0; border-bottom: 1px solid var(--border-light); white-space: normal; overflow: visible; text-overflow: clip; }
+.detail-content { display: flex; gap: 0; padding: 8px 8px 8px 32px; min-width: 0; }
+.file-list { flex: 0 0 50%; min-width: 0; overflow: hidden; }
+.file-list table { width: 100%; border-collapse: collapse; }
+.file-list th { font-size: calc(13px * 0.875); text-transform: uppercase; font-weight: 600; color: var(--text-secondary); padding: 6px 8px; border-bottom: 1px solid var(--border-color); text-align: left; height: 32px; }
+.file-list td { font-size: 13px; padding: 6px 8px; border-bottom: 1px solid var(--border-light); color: var(--text-primary); }
+.file-list .file-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 300px; display: block; }
+.file-list .position { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); }
+.explanation-panel { flex: 1; padding-left: 16px; min-width: 0; overflow-wrap: break-word; word-wrap: break-word; }
+.explanation-panel h4 { font-size: calc(13px * 0.875); text-transform: uppercase; font-weight: 600; color: var(--text-secondary); padding: 6px 0; border-bottom: 1px solid var(--border-color); height: 32px; margin: 0; }
+.explanation-panel p { font-size: 13px; padding: 8px 0; color: var(--text-primary); line-height: 1.6; white-space: normal; word-break: break-word; }
+
+/* ── Experimental badge ──────────────────────────────────── */
+.badge-experimental { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background: #fef9c3; color: #854d0e; vertical-align: middle; margin-left: 8px; cursor: default; }
+
+/* ── Footer ──────────────────────────────────────────────── */
+.footer { text-align: center; margin-top: 24px; color: var(--text-muted); font-size: 13px; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 800px) {
+  .main { padding: 16px; }
+  .app-info-container { flex-direction: column; }
+  .domain-summary-container { flex-direction: column; }
+  .domain-summary-item { border-right: none; border-bottom: 1px solid var(--border-light); padding-bottom: 12px; }
+  .detail-content { flex-direction: column; }
+  .file-list { flex: none; width: 100%; }
+  .explanation-panel { padding-left: 0; padding-top: 8px; }
+}
+/* ── Tab navigation ──────────────────────────────────────── */
+.tab-nav { display: flex; gap: 0; border-bottom: 1px solid var(--border-color); margin-bottom: 28px; flex-wrap: wrap; }
+.tab-btn { background: none; border: none; border-bottom: 2px solid transparent; padding: 10px 18px; font-size: 13px; font-family: var(--font-family); color: var(--text-secondary); cursor: pointer; margin-bottom: -1px; white-space: nowrap; position: relative; }
+.tab-btn:hover { color: var(--text-primary); }
+.tab-btn.active { color: var(--link-color); border-bottom-color: var(--link-color); font-weight: 600; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Tooltip on tab ──────────────────────────────────────── */
+.tab-btn[data-tooltip]::after { content: attr(data-tooltip); position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%); background: #24292f; color: #ffffff; font-size: 12px; font-weight: 400; padding: 6px 10px; border-radius: 4px; white-space: normal; width: max-content; max-width: 260px; text-align: center; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 100; }
+.tab-btn[data-tooltip]:hover::after { opacity: 1; }
+
+/* ── Fact content — prose column ─────────────────────────── */
+.fact-content { max-width: 860px; margin: 0 auto; line-height: 1.75; color: var(--text-primary); font-size: 14px; }
+.fact-content h1 { font-size: 22px; font-weight: 700; margin: 0 0 6px 0; color: var(--text-primary); letter-spacing: -0.01em; }
+.fact-content h1 + p { margin-top: 6px; color: var(--text-secondary); font-size: 14px; margin-bottom: 24px; }
+.fact-content h2 { font-size: 17px; font-weight: 700; margin: 36px 0 12px 0; padding-bottom: 6px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); letter-spacing: -0.01em; }
+.fact-content h3 { font-size: 14px; font-weight: 700; margin: 24px 0 8px 0; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.04em; font-size: 12px; color: var(--text-secondary); }
+.fact-content p { margin: 10px 0; color: var(--text-primary); }
+.fact-content ul, .fact-content ol { margin: 10px 0 10px 22px; }
+.fact-content li { margin: 5px 0; }
+.fact-content a { color: var(--link-color); }
+.fact-content a:hover { text-decoration: underline; }
+
+/* ── Fact tables ─────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; margin: 16px 0; }
+.fact-content table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 13px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color); }
+.fact-content thead { background: var(--bg-card); }
+.fact-content th { text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; padding: 8px 14px; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); }
+.fact-content td { padding: 9px 14px; border-bottom: 1px solid var(--border-light); vertical-align: top; color: var(--text-primary); }
+.fact-content tr:last-child td { border-bottom: none; }
+.fact-content tbody tr:hover { background: #f6f8fa; }
+
+/* ── Fact code ───────────────────────────────────────────── */
+.fact-content code { font-family: var(--font-mono); font-size: 12px; background: #f0f1f3; padding: 2px 6px; border-radius: 4px; color: #c7254e; }
+.fact-content pre { background: #f6f8fa; border: 1px solid var(--border-light); border-radius: 6px; padding: 14px 16px; overflow-x: auto; margin: 14px 0; }
+.fact-content pre code { background: none; color: var(--text-primary); padding: 0; border-radius: 0; }
+.fact-content hr { border: none; border-top: 1px solid var(--border-light); margin: 28px 0; }
+.fact-content strong { font-weight: 600; }
+.fact-content em { font-style: italic; }
+.fact-content blockquote { border-left: 3px solid var(--border-color); margin: 12px 0; padding: 4px 16px; color: var(--text-secondary); }
+.fact-unavailable { padding: 32px 0; }
+.fact-unavailable h3 { font-size: 16px; font-weight: 600; color: var(--text-primary); text-transform: none; letter-spacing: 0; margin: 0 0 12px 0; }
+.fact-unavailable p { margin: 0 0 8px 0; color: var(--text-secondary); }
+.fact-unavailable ol, .fact-unavailable ul { margin: 0 0 0 22px; color: var(--text-primary); }
+.fact-unavailable li { margin: 6px 0; }
+
+/* ── Mermaid diagram card ─────────────────────────────────── */
+.mermaid { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; padding: 24px 16px; margin: 20px 0; overflow-x: auto; text-align: center; cursor: pointer; position: relative; }
+.mermaid:hover { border-color: var(--border-color); }
+.mermaid svg { max-width: 100%; height: auto !important; display: inline-block; }
+.mermaid-zoom-hint { position: absolute; top: 8px; right: 10px; font-size: 11px; color: var(--text-muted); opacity: 0; transition: opacity 0.15s; pointer-events: none; }
+.mermaid:hover .mermaid-zoom-hint { opacity: 1; }
+
+/* ── Diagram lightbox ────────────────────────────────────── */
+.diagram-lightbox { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.7); backdrop-filter: blur(2px); align-items: center; justify-content: center; cursor: zoom-out; padding: 48px 32px; }
+.diagram-lightbox.open { display: flex; }
+.diagram-lightbox-inner { background: #ffffff; border-radius: 10px; padding: 32px; width: 88vw; max-height: 88vh; overflow: hidden; cursor: default; box-shadow: 0 24px 64px rgba(0,0,0,0.35); display: flex; align-items: center; justify-content: center; }
+.diagram-lightbox-inner svg { width: 100% !important; height: auto !important; max-height: 76vh; display: block; }
+.diagram-lightbox-close { position: fixed; top: 20px; right: 24px; background: #ffffff; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-primary); box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 1001; }
+.diagram-lightbox-close:hover { background: var(--bg-card); }
+.diagram-lightbox-hint { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.55); color: #ffffff; font-size: 12px; padding: 6px 14px; border-radius: 20px; pointer-events: none; white-space: nowrap; z-index: 1001; }
+</style>
+<script>
+window.__mermaidPending = [];
+window.__mermaidReady = false;
+window.__renderMermaidIn = function(container) {
+  if (container) { window.__mermaidPending.push(container); }
+};
+</script>
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+mermaid.initialize({ startOnLoad: false, theme: 'default', flowchart: { useMaxWidth: true }, sequence: { useMaxWidth: true } });
+
+window.__renderMermaidIn = function(container) {
+  var nodes = container ? container.querySelectorAll('.mermaid:not([data-processed])') : [];
+  if (nodes.length > 0) {
+    mermaid.run({ nodes: Array.from(nodes) }).then(function() {
+      nodes.forEach(function(node) {
+        if (!node.querySelector('.mermaid-zoom-hint')) {
+          var hint = document.createElement('span');
+          hint.className = 'mermaid-zoom-hint';
+          hint.textContent = 'Click to expand';
+          node.appendChild(hint);
+        }
+      });
+    });
+  }
+};
+
+var drained = new Set();
+(window.__mermaidPending || []).forEach(function(c) {
+  if (!drained.has(c)) { drained.add(c); window.__renderMermaidIn(c); }
+});
+window.__mermaidPending = [];
+window.__mermaidReady = true;
+
+function renderActivePanels() {
+  document.querySelectorAll('.tab-panel.active').forEach(function(p) {
+    if (!drained.has(p)) { drained.add(p); window.__renderMermaidIn(p); }
+  });
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderActivePanels);
+} else {
+  renderActivePanels();
+}
+</script>
+</head><body>
+<div id="diagram-lightbox" class="diagram-lightbox" role="dialog" aria-modal="true">
+  <button class="diagram-lightbox-close" id="diagram-lightbox-close" aria-label="Close">&#x2715;</button>
+  <div class="diagram-lightbox-hint">Scroll to zoom &nbsp;&middot;&nbsp; Drag to pan &nbsp;&middot;&nbsp; Double-click to reset</div>
+  <div class="diagram-lightbox-inner" id="diagram-lightbox-inner"></div>
+</div>
+<div class="main">
+<h1>ZavaPayGateway</h1>
+<div class="report-card">
+  <h2>Component Information</h2>
+  <div class="report-card-body">
+    <div class="app-info-container">
+      <div class="app-info-column">
+        <div class="app-info-row"><span class="app-info-label">Component Name</span><span class="app-info-value">ZavaPayGateway</span></div>
+        <div class="app-info-row"><span class="app-info-label">Java Version</span><span class="app-info-value">Java 8</span></div>
+        <div class="app-info-row"><span class="app-info-label">Effort</span><span class="app-info-value" id="effort-display">S (total story points: 0)</span></div>
+      </div>
+      <div class="app-info-column">
+        <div class="app-info-row"><span class="app-info-label">Build Tools</span><span class="app-info-value">Gradle</span></div>
+        <div class="app-info-row"><span class="app-info-label">Frameworks</span><span class="app-info-value">Apache Struts 1.3</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="tab-issues" data-tooltip="Issues detected in the source code">Issues</button>
+  <button class="tab-btn" data-tab="tab-arch" data-tooltip="How the app&#x27;s layers connect — from UI to data.">Architecture</button>
+  <button class="tab-btn" data-tab="tab-api" data-tooltip="Endpoints exposed by this app and how services communicate.">API Contracts</button>
+  <button class="tab-btn" data-tab="tab-config" data-tooltip="Environment settings, runtime profiles, and deployment manifests.">Configuration</button>
+  <button class="tab-btn" data-tab="tab-workflows" data-tooltip="Domain entities and the core flows users move through.">Business Workflows</button>
+  <button class="tab-btn" data-tab="tab-deps" data-tooltip="Libraries and frameworks this app depends on, grouped by category.">Dependencies</button>
+  <button class="tab-btn" data-tab="tab-data" data-tooltip="Database schema, entity relationships, and persistence behavior.">Data Model</button>
+</nav>
+<div id="tab-issues" class="tab-panel active">
+<div class="target-select-container">
+  <label for="target-select">Target Compute Service:</label>
+  <select id="target-select" onchange="onTargetChange(this.value)">
+    <option value="azure-appservice">Azure App Service</option>
+    <option value="azure-aks">Azure Kubernetes Service</option>
+    <option value="azure-container-apps">Azure Container Apps</option>
+  </select>
+</div>
+<div class="report-card">
+  <h2>Issue Summary</h2>
+  <div class="report-card-body">
+    <div class="domain-summary-container" id="donut-container">
+    </div>
+    <div class="criticality-legend">
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--color-mandatory)"></span>Mandatory</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--color-potential)"></span>Potential</div>
+      <div class="legend-item"><span class="legend-swatch" style="background:var(--color-optional)"></span>Optional</div>
+    </div>
+  </div>
+</div>
+<div class="filter-bar" id="filter-bar">
+  <a class="clear-filters" href="javascript:void(0)" onclick="clearAllFilters()">Clear all</a>
+</div>
+</div><!-- #tab-issues -->
+<div id="tab-arch" class="tab-panel">
+  <div class="fact-content"><h1 id="architecture-diagram">Architecture Diagram</h1>
+<p>ZavaPayGateway is a Java EE web application built on Apache Struts 1.3 that provides a payment gateway interface for ZavaBank. It authenticates users via an external SSO service, retrieves account data from SQL Server, and posts transactions to a downstream Ledger microservice.</p>
+<h2 id="application-architecture">Application Architecture</h2>
+<div class="mermaid">
+flowchart TD
+    subgraph Client["Client Layer"]
+        Browser["Web Browser"]
+    end
+
+    subgraph Presentation["Presentation Layer - JSP"]
+        LoginJSP["login.jsp"]
+        PaymentJSP["payment.jsp"]
+        HistoryJSP["payment-history.jsp"]
+        HealthJSP["health.jsp"]
+    end
+
+    subgraph App["Application Layer - Apache Struts 1.3 / Java 8"]
+        ActionServlet["ActionServlet (Struts Front Controller)"]
+        subgraph Actions["Action Controllers"]
+            LoginAction["LoginAction"]
+            PaymentAction["PaymentAction"]
+            HistoryAction["PaymentHistoryAction"]
+            HealthAction["HealthAction"]
+        end
+        SsoService["SsoSessionService"]
+        Config["PayGatewayConfig"]
+        ConnFactory["PayGatewayConnectionFactory"]
+    end
+
+    subgraph Data["Data Layer"]
+        JDBC["JDBC (mssql-jdbc 12.8.1)"]
+        SQLServer[("SQL Server - ZavaBankDB")]
+    end
+
+    subgraph External["External Services"]
+        AuthGW["Auth Gateway - WhoAmI.ashx (.NET)"]
+        Ledger["Ledger Service - REST API"]
+    end
+
+    Browser -->|"HTTP *.do requests"| ActionServlet
+    ActionServlet -->|"routes"| LoginAction
+    ActionServlet -->|"routes"| PaymentAction
+    ActionServlet -->|"routes"| HistoryAction
+    ActionServlet -->|"routes"| HealthAction
+    LoginAction -->|"resolves session"| SsoService
+    PaymentAction -->|"resolves session"| SsoService
+    HistoryAction -->|"resolves session"| SsoService
+    SsoService -->|"token lookup"| ConnFactory
+    PaymentAction -->|"account queries"| ConnFactory
+    HistoryAction -->|"history queries"| ConnFactory
+    ConnFactory -->|"SQL queries"| JDBC
+    JDBC -->|"connects"| SQLServer
+    SsoService -->|"SSO fallback"| AuthGW
+    PaymentAction -->|"posts transactions"| Ledger
+    LoginAction -->|"renders"| LoginJSP
+    PaymentAction -->|"renders"| PaymentJSP
+    HistoryAction -->|"renders"| HistoryJSP
+    HealthAction -->|"renders"| HealthJSP
+</div>
+<h3 id="technology-stack-summary">Technology Stack Summary</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Layer</th><th>Technology</th><th>Version</th><th>Purpose</th>
+</tr></thead><tbody>
+<tr><td>Presentation</td><td>JSP (JavaServer Pages)</td><td>Servlet 3.1</td><td>Server-rendered UI views</td></tr>
+<tr><td>Web Framework</td><td>Apache Struts</td><td>1.3.10</td><td>MVC front-controller, routing, form binding</td></tr>
+<tr><td>Web Framework</td><td>Apache Struts Taglib</td><td>1.3.10</td><td>JSP tag library for Struts forms</td></tr>
+<tr><td>Runtime</td><td>Java SE</td><td>1.8</td><td>Application runtime language</td></tr>
+<tr><td>Data Access</td><td>JDBC (mssql-jdbc)</td><td>12.8.1.jre8</td><td>Direct SQL Server connectivity</td></tr>
+<tr><td>Build</td><td>Gradle</td><td>8.9</td><td>Build automation and dependency management</td></tr>
+<tr><td>Packaging</td><td>WAR</td><td>—</td><td>Deployed as ROOT.war to servlet container</td></tr>
+<tr><td>Server API</td><td>javax.servlet-api</td><td>3.1.0</td><td>Servlet container contract</td></tr>
+</tbody></table></div>
+<h3 id="data-storage-external-services">Data Storage & External Services</h3>
+<p>The application uses <strong>Microsoft SQL Server</strong> (database <code>ZavaBankDB</code>, host <code>sqlserver:1433</code>) as its sole data store, accessed via raw JDBC through <code>PayGatewayConnectionFactory</code>. Tables queried include <code>SessionTokens</code>, <code>Users</code>, <code>Accounts</code>, and <code>PaymentHistory</code>. Two external HTTP services are consumed: the <strong>Auth Gateway</strong> (<code>zava-auth-gateway:8080/WhoAmI.ashx</code>), a .NET service used as a fallback SSO resolver when a <code>.ZAVAAUTH</code> cookie is present, and the <strong>Ledger Service</strong> (<code>zava-ledger:8080/api/transactions</code>), which receives XML-encoded payment transactions via HTTP POST.</p>
+<h3 id="key-architectural-decisions">Key Architectural Decisions</h3>
+<ul>
+<li><strong>Apache Struts 1.3 MVC pattern</strong>: All HTTP requests matching <code>*.do</code> are handled by the Struts <code>ActionServlet</code>, which dispatches to concrete <code>Action</code> subclasses, providing a classic front-controller structure.</li>
+<li><strong>Direct JDBC with no ORM</strong>: Data access uses raw <code>PreparedStatement</code> calls rather than JPA or any ORM, keeping the data layer thin but tightly coupled to SQL Server.</li>
+<li><strong>External SSO integration</strong>: Session resolution is delegated to <code>SsoSessionService</code>, which first checks for an <code>X-Session-Token</code> header or local <code>SessionTokens</code> table, then falls back to calling the <code>.NET</code> Auth Gateway's <code>WhoAmI.ashx</code> endpoint via HTTP cookie forwarding.</li>
+</ul>
+<h2 id="component-relationships">Component Relationships</h2>
+<div class="mermaid">
+flowchart LR
+    subgraph Presentation["Presentation (JSP Views)"]
+        LoginJSP["login.jsp"]
+        PaymentJSP["payment.jsp"]
+        HistoryJSP["payment-history.jsp"]
+        HealthJSP["health.jsp"]
+    end
+
+    subgraph WebLayer["Web Layer (Struts Actions)"]
+        ActionServlet["ActionServlet"]
+        LoginAction["LoginAction"]
+        PaymentAction["PaymentAction"]
+        HistoryAction["PaymentHistoryAction"]
+        HealthAction["HealthAction"]
+    end
+
+    subgraph Forms["Form Beans"]
+        LoginForm["LoginForm"]
+        PaymentForm["PaymentForm"]
+    end
+
+    subgraph Domain["Domain / Model"]
+        SessionUser["SessionUser"]
+        AccountOption["AccountOption"]
+        HistoryRecord["PaymentHistoryRecord"]
+    end
+
+    subgraph Infra["Infrastructure"]
+        SsoService["SsoSessionService"]
+        ConnFactory["PayGatewayConnectionFactory"]
+        Config["PayGatewayConfig"]
+    end
+
+    ActionServlet -->|"dispatches"| LoginAction
+    ActionServlet -->|"dispatches"| PaymentAction
+    ActionServlet -->|"dispatches"| HistoryAction
+    ActionServlet -->|"dispatches"| HealthAction
+    LoginAction -->|"binds"| LoginForm
+    PaymentAction -->|"binds"| PaymentForm
+    LoginAction -->|"uses"| SsoService
+    PaymentAction -->|"uses"| SsoService
+    HistoryAction -->|"uses"| SsoService
+    SsoService -->|"opens"| ConnFactory
+    SsoService -->|"returns"| SessionUser
+    PaymentAction -->|"opens"| ConnFactory
+    PaymentAction -->|"populates"| AccountOption
+    HistoryAction -->|"opens"| ConnFactory
+    HistoryAction -->|"populates"| HistoryRecord
+    ConnFactory -->|"reads"| Config
+    SsoService -->|"reads"| Config
+    PaymentAction -->|"reads"| Config
+    LoginAction -->|"forwards"| LoginJSP
+    PaymentAction -->|"forwards"| PaymentJSP
+    HistoryAction -->|"forwards"| HistoryJSP
+    HealthAction -->|"forwards"| HealthJSP
+</div>
+<h3 id="component-inventory">Component Inventory</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Component</th><th>Layer</th><th>Type</th><th>Responsibility</th>
+</tr></thead><tbody>
+<tr><td>ActionServlet</td><td>Web Layer</td><td>Struts Front Controller</td><td>Routes all <code>*.do</code> requests to the correct Action</td></tr>
+<tr><td>LoginAction</td><td>Web Layer</td><td>Struts Action</td><td>Handles user login; validates session and redirects</td></tr>
+<tr><td>PaymentAction</td><td>Web Layer</td><td>Struts Action</td><td>Displays payment form, loads accounts, submits transactions to ledger</td></tr>
+<tr><td>PaymentHistoryAction</td><td>Web Layer</td><td>Struts Action</td><td>Retrieves and displays payment history for the current user</td></tr>
+<tr><td>HealthAction</td><td>Web Layer</td><td>Struts Action</td><td>Provides a health-check endpoint</td></tr>
+<tr><td>LoginForm</td><td>Form Beans</td><td>Struts ActionForm</td><td>Carries username/password fields from login form</td></tr>
+<tr><td>PaymentForm</td><td>Form Beans</td><td>Struts ActionForm</td><td>Carries payment fields (from/to account, amount, note)</td></tr>
+<tr><td>SsoSessionService</td><td>Infrastructure</td><td>Service</td><td>Resolves session tokens via DB lookup or Auth Gateway HTTP fallback</td></tr>
+<tr><td>PayGatewayConnectionFactory</td><td>Infrastructure</td><td>Factory</td><td>Opens JDBC connections to SQL Server using config properties</td></tr>
+<tr><td>PayGatewayConfig</td><td>Infrastructure</td><td>Configuration</td><td>Loads <code>paygateway.properties</code> and exposes typed accessors</td></tr>
+<tr><td>SessionUser</td><td>Domain</td><td>Model / DTO</td><td>Carries authenticated user identity (userId, username)</td></tr>
+<tr><td>AccountOption</td><td>Domain</td><td>Model / DTO</td><td>Represents a selectable bank account (id, number, type, balance)</td></tr>
+<tr><td>PaymentHistoryRecord</td><td>Domain</td><td>Model / DTO</td><td>Represents a single payment history entry</td></tr>
+<tr><td>login.jsp</td><td>Presentation</td><td>JSP View</td><td>Renders the login form</td></tr>
+<tr><td>payment.jsp</td><td>Presentation</td><td>JSP View</td><td>Renders the payment submission form with account dropdowns</td></tr>
+<tr><td>payment-history.jsp</td><td>Presentation</td><td>JSP View</td><td>Renders the tabular payment history</td></tr>
+<tr><td>health.jsp</td><td>Presentation</td><td>JSP View</td><td>Renders the application health status</td></tr>
+</tbody></table></div></div>
+</div>
+<div id="tab-api" class="tab-panel">
+  <div class="fact-content"><h1 id="api-service-communication-contracts">API & Service Communication Contracts</h1>
+<p>ZavaPayGateway exposes four browser-facing Struts action endpoints (<code>*.do</code>) for login, payment submission, payment history, and health, and acts as a client to two downstream HTTP services: the Auth Gateway and the Ledger Service.</p>
+<h2 id="service-catalog">Service Catalog</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Port</th><th>Category</th><th>Purpose</th>
+</tr></thead><tbody>
+<tr><td>ZavaPayGateway</td><td>8080 (servlet container)</td><td>API Layer / Business</td><td>Java EE web application; handles user authentication, payment form rendering, payment submission, and history display</td></tr>
+<tr><td>Auth Gateway (external)</td><td>8080</td><td>Infrastructure</td><td>.NET service that resolves a <code>.ZAVAAUTH</code> FormsAuth cookie to a session token via <code>WhoAmI.ashx</code></td></tr>
+<tr><td>Ledger Service (external)</td><td>8080</td><td>Business</td><td>Downstream REST/XML service that records and confirms payment transactions via <code>POST /api/transactions</code></td></tr>
+<tr><td>SQL Server – ZavaBankDB (external)</td><td>1433</td><td>Infrastructure</td><td>Relational database storing users, session tokens, accounts, and payment history</td></tr>
+</tbody></table></div>
+<h2 id="api-endpoints-inventory">API Endpoints Inventory</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Method</th><th>Path</th><th>Request Type</th><th>Response Type</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td>ZavaPayGateway</td><td>GET / POST</td><td><code>/login.do</code></td><td><code>LoginForm</code> (sessionToken field)</td><td>Redirect to <code>/makePayment.do</code> or re-render <code>login.jsp</code></td><td>Entry point; <code>index.jsp</code> redirects here</td></tr>
+<tr><td>ZavaPayGateway</td><td>GET</td><td><code>/makePayment.do</code></td><td>None (session-validated)</td><td><code>payment.jsp</code> with account dropdown</td><td>Loads accounts from DB; redirects to <code>/login.do</code> if unauthenticated</td></tr>
+<tr><td>ZavaPayGateway</td><td>POST</td><td><code>/makePayment.do</code></td><td><code>PaymentForm</code> (accountId, amount, paymentType, memo)</td><td>Redirect to <code>/paymentHistory.do</code> on success, or re-render <code>payment.jsp</code> on error</td><td>Posts XML transaction to Ledger Service</td></tr>
+<tr><td>ZavaPayGateway</td><td>GET</td><td><code>/paymentHistory.do</code></td><td>None (session-validated)</td><td><code>payment-history.jsp</code> with transaction rows</td><td>Fetches top 75 transactions from DB; redirects to <code>/login.do</code> if unauthenticated</td></tr>
+<tr><td>ZavaPayGateway</td><td>GET</td><td><code>/health.do</code></td><td>None</td><td><code>health.jsp</code></td><td>Simple liveness indicator; no authentication required</td></tr>
+</tbody></table></div>
+<h2 id="management-observability-endpoints">Management & Observability Endpoints</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Endpoint</th><th>Custom Metrics</th>
+</tr></thead><tbody>
+<tr><td>ZavaPayGateway</td><td><code>/health.do</code> → <code>health.jsp</code></td><td>None — renders a static HTML page with "ZavaPayGateway - Online"</td></tr>
+</tbody></table></div>
+<p>No Spring Boot Actuator, Micrometer, OpenTelemetry, or any other observability instrumentation is present. There are no <code>/metrics</code>, <code>/actuator/health</code>, or structured logging endpoints.</p>
+<h2 id="dtos-contracts">DTOs & Contracts</h2>
+<p><strong>Form Beans (request-side):</strong></p>
+<ul>
+<li><code>LoginForm</code> (extends <code>ActionForm</code>) — carries the <code>sessionToken</code> string submitted by the login form. Mutable JavaBean, no immutability guarantee.</li>
+<li><code>PaymentForm</code> (extends <code>ActionForm</code>) — carries <code>accountId</code> (int), <code>amount</code> (String), <code>paymentType</code> (String), and <code>memo</code> (String). Mutable JavaBean.</li>
+</ul>
+<p><strong>Domain / Response Models:</strong></p>
+<ul>
+<li><code>SessionUser</code> — carries <code>userId</code> (int) and <code>username</code> (String) resolved from the SSO session. Set on the <code>HttpSession</code> keyed under <code>SsoSessionService.SESSION_USER</code>. Not a serialized DTO; only used in-process.</li>
+<li><code>AccountOption</code> — carries <code>accountId</code>, <code>accountNumber</code>, <code>accountType</code>, and <code>balance</code> (String). Populated from a SQL query and placed in request scope as the <code>accountOptions</code> list for the payment form dropdown.</li>
+<li><code>PaymentHistoryRecord</code> — carries <code>transactionId</code>, <code>accountNumber</code>, <code>amount</code>, <code>paymentType</code>, <code>referenceNumber</code>, <code>transactionDate</code>, and <code>status</code>. Placed in request scope as <code>historyRows</code> for the history view.</li>
+</ul>
+<p><strong>External Contract (outbound, Ledger Service):</strong></p>
+<p>The payment payload sent to the Ledger Service is a hand-built XML string:</p>
+<pre><code>
+&lt;transactionRequest&gt;
+  &lt;debitAccountId&gt;{id}&lt;/debitAccountId&gt;
+  &lt;creditAccountId&gt;{settlementAccountId}&lt;/creditAccountId&gt;
+  &lt;amount&gt;{amount}&lt;/amount&gt;
+  &lt;description&gt;{memo}&lt;/description&gt;
+  &lt;referenceNumber&gt;{referenceNumber}&lt;/referenceNumber&gt;
+&lt;/transactionRequest&gt;
+</code></pre>
+<p>The Ledger Service responds with XML; a successful post is detected by checking whether the response body contains <code><status>POSTED</status></code>.</p>
+<p>There are no OpenAPI/Swagger specifications, protobuf schemas, or GraphQL schemas. No Jackson or any JSON serialization library is used; the only serialized format is the hand-crafted XML above.</p>
+<h2 id="communication-patterns">Communication Patterns</h2>
+<p><strong>Synchronous HTTP (outbound):</strong></p>
+<ul>
+<li><strong>Auth Gateway</strong> — <code>SsoSessionService</code> calls <code>GET http://zava-auth-gateway:8080/WhoAmI.ashx</code> forwarding the <code>.ZAVAAUTH</code> cookie. Uses raw <code>java.net.HttpURLConnection</code> with a connect timeout of 8 000 ms and a read timeout of 8 000 ms. This is a fallback path; the primary path resolves the session token directly from the <code>SessionTokens</code> table.</li>
+<li><strong>Ledger Service</strong> — <code>PaymentAction</code> calls <code>POST http://zava-ledger:8080/api/transactions</code> with <code>Content-Type: application/xml</code>. Connect timeout: 8 000 ms; read timeout: 8 000 ms. No retry logic or circuit-breaker is implemented; a non-200 response or network error is treated as a payment failure.</li>
+</ul>
+<p><strong>Database (synchronous, JDBC):</strong></p>
+<ul>
+<li>Direct <code>PreparedStatement</code> calls via <code>PayGatewayConnectionFactory.openConnection()</code> (no connection pooling library declared; relies on <code>DriverManager</code>).</li>
+</ul>
+<p><strong>Asynchronous patterns:</strong> None. All communication is synchronous request/response.</p>
+<p><strong>Resilience patterns:</strong> No circuit breaker, retry, or bulkhead patterns are implemented. The only resilience mechanism is the hardcoded 8-second timeout on outbound HTTP calls.</p>
+<p><strong>Service discovery:</strong> Services are addressed by hardcoded hostnames configured in <code>paygateway.properties</code> (<code>zava-auth-gateway</code>, <code>zava-ledger</code>, <code>sqlserver</code>). No service registry or DNS-based discovery is used.</p>
+<p><strong>API gateway:</strong> ZavaPayGateway itself acts as a lightweight aggregating gateway, calling both the Auth Gateway and the Ledger Service and combining their results into the user-facing web interface.</p>
+<p><strong>Security posture:</strong> There is no TLS/HTTPS configuration at the application layer; transport security depends entirely on the deployment environment. There is no OAuth2, JWT, or HTTP Basic Auth at the API level. Session-based authentication is implemented using a custom <code>SessionTokens</code> database table; all non-health endpoints perform a session check and redirect unauthenticated requests to <code>/login.do</code>. The login form also accepts a token submitted via the <code>sessionToken</code> query parameter or the <code>X-Session-Token</code> HTTP header, which bypasses the SSO cookie flow.</p>
+<h2 id="service-technology-matrix">Service Technology Matrix</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Capability</th><th>ZavaPayGateway</th>
+</tr></thead><tbody>
+<tr><td>Web Framework</td><td>Apache Struts 1.3 (ActionServlet front-controller)</td></tr>
+<tr><td>Data Access</td><td>Raw JDBC via <code>DriverManager</code> (no ORM, no connection pool)</td></tr>
+<tr><td>Service Discovery</td><td>None (hardcoded hostnames in properties file)</td></tr>
+<tr><td>Gateway Functionality</td><td>Partial — aggregates Auth Gateway and Ledger Service calls</td></tr>
+<tr><td>Health / Actuator</td><td>Custom <code>/health.do</code> (static HTML only)</td></tr>
+<tr><td>Caching</td><td>None</td></tr>
+<tr><td>Metrics / Observability</td><td>None</td></tr>
+<tr><td>Async Messaging</td><td>None</td></tr>
+</tbody></table></div>
+<h2 id="service-communication-sequence">Service Communication Sequence</h2>
+<div class="mermaid">
+sequenceDiagram
+    participant Browser as "Browser"
+    participant Gateway as "ZavaPayGateway (Struts)"
+    participant DB as "SQL Server (ZavaBankDB)"
+    participant AuthGW as "Auth Gateway (WhoAmI.ashx)"
+    participant Ledger as "Ledger Service"
+
+    Note over Browser,Gateway: Login Flow
+    Browser->>Gateway: POST /login.do (sessionToken)
+    Gateway->>DB: SELECT UserID, Username FROM SessionTokens JOIN Users
+    alt Token found in DB
+        DB-->>Gateway: userId, username
+        Gateway-->>Browser: 302 Redirect to /makePayment.do
+    else Token not in DB - try SSO cookie
+        Gateway->>AuthGW: GET /WhoAmI.ashx (Cookie: .ZAVAAUTH=value)
+        alt Auth Gateway returns sessionToken
+            AuthGW-->>Gateway: JSON sessionToken
+            Gateway->>DB: SELECT UserID, Username (resolved token)
+            DB-->>Gateway: userId, username
+            Gateway-->>Browser: 302 Redirect to /makePayment.do
+        else Auth Gateway unavailable or token invalid
+            AuthGW-->>Gateway: error / no match
+            Gateway-->>Browser: 200 login.jsp (loginError shown)
+        end
+    end
+
+    Note over Browser,Gateway: Make Payment Flow
+    Browser->>Gateway: GET /makePayment.do
+    Gateway->>DB: SELECT TOP 30 accounts for user
+    DB-->>Gateway: AccountOption list
+    Gateway-->>Browser: 200 payment.jsp (account dropdown)
+    Browser->>Gateway: POST /makePayment.do (accountId, amount, paymentType, memo)
+    Gateway->>Ledger: POST /api/transactions (XML body, timeout 8s)
+    alt Ledger returns POSTED
+        Ledger-->>Gateway: 200 XML with status POSTED
+        Gateway->>DB: INSERT INTO PaymentHistory
+        Gateway-->>Browser: 302 Redirect to /paymentHistory.do
+    else Ledger error or timeout
+        Ledger-->>Gateway: non-200 or IOException
+        Gateway-->>Browser: 200 payment.jsp (statusError shown)
+    end
+
+    Note over Browser,Gateway: Payment History Flow
+    Browser->>Gateway: GET /paymentHistory.do
+    Gateway->>DB: SELECT TOP 75 transactions for user
+    DB-->>Gateway: PaymentHistoryRecord list
+    Gateway-->>Browser: 200 payment-history.jsp
+</div></div>
+</div>
+<div id="tab-config" class="tab-panel">
+  <div class="fact-content"><h1 id="configuration-externalized-settings-inventory">Configuration & Externalized Settings Inventory</h1>
+<p>ZavaPayGateway has a minimal configuration surface: a single <code>paygateway.properties</code> file bundled inside the WAR, with all properties overridable at runtime via environment variables. There are no profiles, no external config servers, and no secret stores.</p>
+<h2 id="configuration-sources">Configuration Sources</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Source</th><th>Type</th><th>Path / Location</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td><code>paygateway.properties</code></td><td>Properties file (classpath)</td><td><code>src/main/resources/paygateway.properties</code></td><td>Loaded at class-initialization time via <code>PayGatewayConfig</code>; bundled into the WAR under <code>WEB-INF/classes/</code></td></tr>
+<tr><td><code>paygateway.properties</code> (bin copy)</td><td>Properties file (classpath)</td><td><code>bin/main/paygateway.properties</code></td><td>Identical copy present in the Gradle incremental build output directory</td></tr>
+<tr><td><code>web.xml</code></td><td>Java EE Deployment Descriptor</td><td><code>src/main/webapp/WEB-INF/web.xml</code></td><td>Configures the Struts <code>ActionServlet</code> and URL mapping for <code>*.do</code> pattern</td></tr>
+<tr><td><code>struts-config.xml</code></td><td>Struts Framework Config</td><td><code>src/main/webapp/WEB-INF/struts-config.xml</code></td><td>Declares form beans, action mappings, and view forwards</td></tr>
+<tr><td>Environment Variables</td><td>Runtime OS/Container env</td><td>Process environment</td><td>Every <code>paygateway.properties</code> key has a corresponding ENV override (see Properties Inventory). Environment variables take precedence over the properties file.</td></tr>
+<tr><td>Dockerfile</td><td>Container Build Config</td><td><code>Dockerfile</code></td><td>Multi-stage build; no environment variable injection at build time</td></tr>
+</tbody></table></div>
+<p>No Spring Cloud Config, Azure App Configuration, AWS AppConfig, Consul KV, HashiCorp Vault, or Azure KeyVault integration is present.</p>
+<h2 id="build-profiles">Build Profiles</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Profile</th><th>Activation</th><th>Purpose</th><th>Key Dependencies / Plugins</th>
+</tr></thead><tbody>
+<tr><td>Default (no profile)</td><td>Always active</td><td>Single build configuration</td><td><code>java</code>, <code>war</code> plugins; WAR packaged as <code>ROOT.war</code></td></tr>
+<tr><td>Docker build stage</td><td>Manual — <code>docker build</code> command</td><td>Compiles the WAR inside a Gradle 7.6 / JDK 8 container</td><td>Uses <code>gradle:7.6-jdk8</code> base image; runs <code>gradle war --no-daemon</code></td></tr>
+</tbody></table></div>
+<p>There are no Maven/Gradle build profiles (no <code>build.gradle</code> <code>if (profile == …)</code> blocks, no separate source sets per environment). All dependencies are in a single configuration.</p>
+<h2 id="runtime-profiles">Runtime Profiles</h2>
+<p>No runtime profile system is implemented. There are no <code>application-dev.properties</code>, <code>application-prod.properties</code>, or equivalent profile-specific configuration files. The single <code>paygateway.properties</code> file is the only configuration source; environment-specific values are injected at runtime via environment variables.</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Profile</th><th>Activation Method</th><th>Config Files</th><th>Key Overrides</th>
+</tr></thead><tbody>
+<tr><td>Default (only profile)</td><td>Always active</td><td><code>paygateway.properties</code></td><td>All values can be overridden by environment variables at runtime</td></tr>
+</tbody></table></div>
+<h2 id="properties-inventory">Properties Inventory</h2>
+<h3 id="zavapaygateway-paygateway-properties">ZavaPayGateway — <code>paygateway.properties</code></h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Property Key</th><th>Environment Variable</th><th>Default Value</th><th>Type</th><th>Purpose</th>
+</tr></thead><tbody>
+<tr><td><code>db.host</code></td><td><code>DB_HOST</code></td><td><code>sqlserver</code></td><td>String (hostname)</td><td>SQL Server hostname</td></tr>
+<tr><td><code>db.port</code></td><td><code>DB_PORT</code></td><td><code>1433</code></td><td>int</td><td>SQL Server port</td></tr>
+<tr><td><code>db.name</code></td><td><code>DB_NAME</code></td><td><code>ZavaBankDB</code></td><td>String</td><td>Database name</td></tr>
+<tr><td><code>db.user</code></td><td><code>DB_USER</code></td><td><code>sa</code></td><td>String</td><td>SQL Server login</td></tr>
+<tr><td><code>db.password</code></td><td><code>DB_PASSWORD</code></td><td><code>Zava123!</code> (plaintext)</td><td>String</td><td>SQL Server password — <strong>sensitive</strong></td></tr>
+<tr><td><code>sso.cookie.name</code></td><td><code>SSO_COOKIE_NAME</code></td><td><code>.ZAVAAUTH</code></td><td>String</td><td>Name of the FormsAuth cookie to forward to the Auth Gateway</td></tr>
+<tr><td><code>auth.gateway.whoami.url</code></td><td><code>AUTH_GATEWAY_WHOAMI_URL</code></td><td><code>http://zava-auth-gateway:8080/WhoAmI.ashx</code></td><td>URL</td><td>Auth Gateway endpoint for SSO cookie resolution</td></tr>
+<tr><td><code>ledger.url</code></td><td><code>LEDGER_URL</code></td><td><code>http://zava-ledger:8080/api/transactions</code></td><td>URL</td><td>Ledger Service endpoint for posting payment transactions</td></tr>
+<tr><td><code>ledger.settlement.account.id</code></td><td><code>LEDGER_SETTLEMENT_ACCOUNT_ID</code></td><td><code>1</code></td><td>int</td><td>Default settlement/credit account ID used when no other account is configured</td></tr>
+</tbody></table></div>
+<p><strong>Resolution logic</strong>: <code>PayGatewayConfig.read(envKey, propertyKey)</code> checks <code>System.getenv(envKey)</code> first; if the environment variable is non-null and non-blank it takes precedence. Otherwise, the value from <code>paygateway.properties</code> is used.</p>
+<h2 id="startup-parameters-resource-requirements">Startup Parameters & Resource Requirements</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>JVM / Runtime Options</th><th>Memory</th><th>CPU</th><th>Instance Count</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td>ZavaPayGateway (WAR in Tomcat)</td><td>None specified in Dockerfile or any startup script</td><td>Not configured</td><td>Not configured</td><td>1</td><td>The Dockerfile uses <code>CMD ["catalina.sh", "run"]</code> with Tomcat defaults; no <code>-Xms</code>/<code>-Xmx</code> flags, no <code>-D</code> system properties</td></tr>
+<tr><td>Docker build stage</td><td>None</td><td>Not configured</td><td>Not configured</td><td>1</td><td><code>gradle:7.6-jdk8</code> image; <code>--no-daemon</code> flag for Gradle</td></tr>
+</tbody></table></div>
+<p>No Kubernetes manifests, Helm charts, or Docker Compose files are present in the repository. Resource limits and scaling must be configured externally by the deployment platform.</p>
+<h2 id="startup-dependency-chain">Startup Dependency Chain</h2>
+<p>The application has no built-in startup dependency management. The following external services must be available before ZavaPayGateway can serve requests:</p>
+<ol>
+<li><strong>SQL Server (<code>sqlserver:1433</code>)</strong> — required at first request. There is no connection pool warm-up; the first database query will fail if SQL Server is unreachable. No retry or health-check wait mechanism is configured.</li>
+<li><strong>Auth Gateway (<code>zava-auth-gateway:8080</code>)</strong> — required only when a user presents a <code>.ZAVAAUTH</code> cookie. If unavailable, login will fail for SSO-cookie-based users but the application will not crash.</li>
+<li><strong>Ledger Service (<code>zava-ledger:8080</code>)</strong> — required only when a payment is submitted. If unavailable, the payment POST returns an error to the user but the application remains running.</li>
+</ol>
+<p>No <code>dockerize</code>, <code>wait-for-tcp</code>, Kubernetes readiness probes, or Docker Compose <code>depends_on</code> mechanisms are configured.</p>
+<h2 id="secrets-sensitive-configuration">Secrets & Sensitive Configuration</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Secret Reference</th><th>Type</th><th>File / Source</th><th>Masked Value</th>
+</tr></thead><tbody>
+<tr><td><code>db.password</code> / <code>DB_PASSWORD</code></td><td>Database password</td><td><code>src/main/resources/paygateway.properties</code></td><td>[MASKED — hard-coded plaintext in committed file]</td></tr>
+<tr><td><code>db.user</code> / <code>DB_USER</code></td><td>Database username</td><td><code>src/main/resources/paygateway.properties</code></td><td>[MASKED]</td></tr>
+</tbody></table></div>
+<p>No encryption is applied to any sensitive values. The database password is stored as plain text in a committed properties file and is visible in version control history.</p>
+<h3 id="secrets-provisioning-workflow">Secrets Provisioning Workflow</h3>
+<p>There is no secrets management workflow. All sensitive configuration is hard-coded in <code>paygateway.properties</code> which is committed to source control and bundled into the WAR artifact at build time. The only override mechanism is setting the corresponding environment variable (<code>DB_PASSWORD</code>, <code>DB_USER</code>) at container/JVM startup, which would shadow the built-in values. No Key Vault, Vault, Secrets Manager, Sealed Secrets, Jasypt encryption, or any other secrets management tool is integrated.</p>
+<p><strong>Recommended remediation</strong>: Remove <code>db.password</code> (and <code>db.user</code>) from <code>paygateway.properties</code>, require them to be injected exclusively via environment variables or a secret store, and rotate the existing credentials immediately since they are in version control history.</p>
+<h2 id="feature-flags">Feature Flags</h2>
+<p>No feature flag framework is present. There are no <code>@ConditionalOnProperty</code>, <code>@ConditionalOnExpression</code>, LaunchDarkly, Unleash, or any other feature toggle mechanism. All features are statically enabled.</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Flag Name</th><th>Default</th><th>Controlled By</th>
+</tr></thead><tbody>
+<tr><td>N/A</td><td>N/A</td><td>No feature flags detected</td></tr>
+</tbody></table></div>
+<h2 id="framework-runtime-versions">Framework & Runtime Versions</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Component</th><th>Version</th><th>Source</th>
+</tr></thead><tbody>
+<tr><td>Java (source / target)</td><td>1.8 (Java 8)</td><td><code>build.gradle</code> <code>sourceCompatibility</code> / <code>targetCompatibility</code></td></tr>
+<tr><td>Gradle (build tool)</td><td>7.6 (Docker build stage), 8.9 (local wrapper)</td><td><code>Dockerfile</code> base image; <code>.gradle/8.9/</code> directory</td></tr>
+<tr><td>Apache Struts Core</td><td>1.3.10</td><td><code>build.gradle</code> <code>dependencies</code></td></tr>
+<tr><td>Apache Struts Taglib</td><td>1.3.10</td><td><code>build.gradle</code> <code>dependencies</code></td></tr>
+<tr><td>Microsoft JDBC Driver for SQL Server</td><td>12.8.1.jre8</td><td><code>build.gradle</code> <code>dependencies</code></td></tr>
+<tr><td>javax.servlet-api</td><td>3.1.0</td><td><code>build.gradle</code> <code>dependencies</code> (compileOnly)</td></tr>
+<tr><td>Servlet container (runtime)</td><td>Apache Tomcat 9 (JDK 8 variant)</td><td><code>Dockerfile</code> <code>FROM tomcat:9-jdk8</code></td></tr>
+<tr><td>Docker build base image</td><td><code>gradle:7.6-jdk8</code></td><td><code>Dockerfile</code> first stage</td></tr>
+<tr><td>Docker runtime base image</td><td><code>tomcat:9-jdk8</code></td><td><code>Dockerfile</code> second stage</td></tr>
+</tbody></table></div></div>
+</div>
+<div id="tab-workflows" class="tab-panel">
+  <div class="fact-content"><h1 id="core-business-workflows">Core Business Workflows</h1>
+<p>ZavaPayGateway provides ZavaBank customers with a web-based payment portal where they can authenticate via the bank's shared SSO system, submit payments (ACH, Bill Pay, Wire) against their bank accounts, and review their recent payment history.</p>
+<h2 id="domain-entities">Domain Entities</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Entity</th><th>Service / Bounded Context</th><th>Description</th><th>Key Relationships</th>
+</tr></thead><tbody>
+<tr><td>User</td><td>Identity / Auth (Auth Gateway + ZavaBankDB)</td><td>An authenticated ZavaBank employee or customer who can initiate payments</td><td>Authenticated via session token; linked to one or more Accounts</td></tr>
+<tr><td>SessionToken</td><td>Identity / Auth (ZavaBankDB)</td><td>A short-lived credential that proves a User has authenticated through ZavaAuthGateway</td><td>Belongs to one User; has an expiry; may be active or revoked</td></tr>
+<tr><td>Account</td><td>Banking (ZavaBankDB)</td><td>A bank account with a type (ACH, checking, savings) and current balance</td><td>Belongs to a User; can be the source of a Transaction</td></tr>
+<tr><td>AccountType</td><td>Banking (ZavaBankDB)</td><td>A classification of an Account (e.g., Checking, Savings)</td><td>Classifies one or many Accounts</td></tr>
+<tr><td>Transaction</td><td>Ledger (Ledger Service + ZavaBankDB)</td><td>A completed payment movement between a debit account and a settlement account</td><td>Belongs to an Account; created by the Ledger Service; read back by ZavaPayGateway</td></tr>
+</tbody></table></div>
+<h2 id="service-to-domain-mapping">Service-to-Domain Mapping</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Domain Context</th><th>Owned Entities / Data</th><th>External Dependencies</th>
+</tr></thead><tbody>
+<tr><td>ZavaPayGateway</td><td>Payment Initiation</td><td>None (read-only consumer of shared DB)</td><td>Auth Gateway (SSO), Ledger Service (transaction write), SQL Server ZavaBankDB (read)</td></tr>
+<tr><td>Auth Gateway (.NET, external)</td><td>Identity / Authentication</td><td>SSO session tokens (FormsAuth cookies)</td><td>ZavaBankDB <code>SessionTokens</code>, <code>Users</code> tables</td></tr>
+<tr><td>Ledger Service (external)</td><td>Transaction Recording</td><td><code>Transactions</code> table (write owner)</td><td>ZavaBankDB</td></tr>
+<tr><td>ZavaBankDB (SQL Server)</td><td>Shared Data Store</td><td>All entities — Users, SessionTokens, Accounts, AccountTypes, Transactions</td><td>Shared across all services</td></tr>
+</tbody></table></div>
+<p>ZavaPayGateway owns no data and acts as an orchestrating consumer: it reads session, account, and transaction data from the shared database and delegates transaction writes to the Ledger Service.</p>
+<h2 id="primary-workflows">Primary Workflows</h2>
+<h3 id="workflow-1-user-authentication-sso-login">Workflow 1: User Authentication (SSO Login)</h3>
+<p>A user lands on the payment portal and must prove their identity before accessing any protected feature.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>Browser is redirected to <code>/login.do</code> (from <code>index.jsp</code> or any protected page redirect).</li>
+<li>The login form is displayed, prompting for a session token.</li>
+<li>The user submits a session token. The token may be provided in three ways:</li>
+</ol>
+<ul>
+<li>Form field (<code>sessionToken</code>)</li>
+<li>Query parameter (<code>?sessionToken=…</code>)</li>
+<li>HTTP header (<code>X-Session-Token</code>)</li>
+</ul>
+<ol>
+<li><code>LoginAction</code> calls <code>SsoSessionService.resolveSessionUser()</code> with the submitted token.</li>
+<li><strong>Primary path</strong>: <code>SsoSessionService</code> queries <code>SessionTokens JOIN Users</code> in SQL Server where <code>Token = ? AND IsActive = 1 AND ExpiresAt > GETDATE() AND u.IsActive = 1</code>.</li>
+</ol>
+<ul>
+<li>If a matching active token is found → <code>SessionUser</code> (userId, username) is stored in <code>HttpSession</code> → redirect to <code>/makePayment.do</code>.</li>
+</ul>
+<ol>
+<li><strong>SSO cookie fallback</strong>: If no explicit token is provided and a <code>.ZAVAAUTH</code> cookie is present, <code>SsoSessionService</code> forwards the cookie to <code>Auth Gateway /WhoAmI.ashx</code> via HTTP GET. The Auth Gateway returns a JSON object containing a <code>sessionToken</code> field. That token is then looked up in the DB (step 5).</li>
+<li>If neither path yields a valid user → <code>loginError</code> is set and <code>login.jsp</code> is re-rendered.</li>
+</ol>
+<p><strong>Business rules</strong>: Token must be active (<code>IsActive = 1</code>), not expired (<code>ExpiresAt > GETDATE()</code>), and the owning user must be active (<code>u.IsActive = 1</code>).</p>
+<p>---</p>
+<h3 id="workflow-2-payment-submission">Workflow 2: Payment Submission</h3>
+<p>An authenticated user selects a source account, enters an amount and payment type, and submits a payment.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>User navigates to <code>/makePayment.do</code> (GET). Session is validated; if invalid, redirected to login.</li>
+<li><code>PaymentAction</code> queries SQL Server for the top 30 active accounts (<code>Status = 'Active'</code>) and renders the payment form with the account dropdown populated.</li>
+<li>User fills in: source account, amount, payment type (ACH / Bill Pay / Wire), and optional memo. Submits the form (POST <code>/makePayment.do</code>).</li>
+<li><code>PaymentAction</code> validates the submission:</li>
+</ol>
+<ul>
+<li>Account ID, amount, and payment type must all be non-empty.</li>
+<li>Amount must be parseable as a decimal (<code>BigDecimal</code>) and greater than zero.</li>
+</ul>
+<ol>
+<li>A unique reference number is generated: <code>PGW-{System.currentTimeMillis()}</code>.</li>
+<li>A settlement (credit) account ID is resolved from configuration (<code>ledger.settlement.account.id</code>). If the configured settlement account happens to equal the selected debit account, the fallback logic chooses account 2 (or 1 if the debit is already 2).</li>
+<li><code>PaymentAction.postToLedger()</code> sends an XML <code><transactionRequest></code> to the Ledger Service (<code>POST /api/transactions</code>) with a connect/read timeout of 8 seconds.</li>
+</ol>
+<ul>
+<li>The <code>Description</code> field is encoded as <code>ZavaPayGateway:{paymentType}:{memo}</code> so history queries can filter and parse payment type.</li>
+</ul>
+<ol>
+<li>If the Ledger Service responds with HTTP 200 <strong>and</strong> the body contains <code><status>POSTED</status></code> → success:</li>
+</ol>
+<ul>
+<li>A confirmation message is set (reference number + amount).</li>
+<li>User is redirected to <code>/paymentHistory.do</code>.</li>
+</ul>
+<ol>
+<li>If the Ledger Service is unreachable, times out, returns non-200, or does not contain <code><status>POSTED</status></code> → error:</li>
+</ol>
+<ul>
+<li><code>statusError</code> attribute is set ("Unable to post payment to ZavaLedger.").</li>
+<li>Payment form is re-rendered. No retry is attempted.</li>
+</ul>
+<p>---</p>
+<h3 id="workflow-3-payment-history-view">Workflow 3: Payment History View</h3>
+<p>An authenticated user reviews their recent payment activity.</p>
+<p><strong>Steps:</strong></p>
+<ol>
+<li>User navigates to <code>/paymentHistory.do</code> (GET). Session is validated.</li>
+<li><code>PaymentHistoryAction</code> queries the <code>Transactions JOIN Accounts</code> table for the 75 most recent transactions where <code>Description LIKE 'ZavaPayGateway:%'</code>, ordered by <code>TransactionDate DESC</code>.</li>
+<li>The <code>paymentType</code> is extracted from the <code>Description</code> field by splitting on <code>:</code> and taking the second segment.</li>
+<li>Results are rendered in a table showing: Transaction ID, Account Number, Amount, Payment Type, Reference Number, Transaction Date, and Status.</li>
+</ol>
+<p>---</p>
+<h3 id="workflow-4-health-check">Workflow 4: Health Check</h3>
+<p>The <code>/health.do</code> endpoint returns a static HTML page confirming the servlet is running. No business logic, database access, or authentication is involved.</p>
+<h2 id="cross-service-data-flows">Cross-Service Data Flows</h2>
+<p>ZavaPayGateway orchestrates two cross-service flows:</p>
+<p><strong>1. Session Resolution (SSO Cookie path)</strong>:</p>
+<p>Browser → <code>ZavaPayGateway (SsoSessionService)</code> → <code>Auth Gateway (WhoAmI.ashx)</code> → returns <code>sessionToken</code> → <code>ZavaPayGateway</code> → <code>SQL Server (SessionTokens JOIN Users)</code> → returns <code>SessionUser</code>. If the Auth Gateway is unavailable (IOException or non-200 response), the entire SSO-cookie login path fails silently; the user sees "Session token was not found or has expired." No fallback identity is established.</p>
+<p><strong>2. Payment Submission (Ledger delegation)</strong>:</p>
+<p>Browser → <code>ZavaPayGateway (PaymentAction)</code> → <code>Ledger Service (POST /api/transactions)</code> → Ledger writes to <code>Transactions</code> table → returns <code><status>POSTED</status></code>. <code>ZavaPayGateway</code> then reads the transaction back indirectly by redirecting to the Payment History page, which queries the <code>Transactions</code> table directly. If the Ledger Service is unavailable, the payment is dropped silently (no retry, no queue, no compensating action).</p>
+<h2 id="business-workflow-sequence">Business Workflow Sequence</h2>
+<div class="mermaid">
+sequenceDiagram
+    participant User as "Bank User (Browser)"
+    participant PGW as "ZavaPayGateway"
+    participant DB as "SQL Server (ZavaBankDB)"
+    participant AuthGW as "Auth Gateway"
+    participant Ledger as "Ledger Service"
+
+    Note over User,PGW: Workflow 1 - Authentication
+    User->>PGW: GET /login.do (or redirect from protected page)
+    PGW-->>User: 200 login.jsp
+    User->>PGW: POST /login.do (sessionToken or .ZAVAAUTH cookie)
+    alt Token provided explicitly
+        PGW->>DB: Lookup token in SessionTokens JOIN Users
+        alt Token active and not expired
+            DB-->>PGW: userId, username
+            PGW-->>User: 302 Redirect to /makePayment.do
+        else Token invalid or expired
+            DB-->>PGW: no rows
+            PGW-->>User: 200 login.jsp with error
+        end
+    else .ZAVAAUTH cookie present
+        PGW->>AuthGW: GET /WhoAmI.ashx (Cookie: .ZAVAAUTH)
+        alt Auth Gateway resolves token
+            AuthGW-->>PGW: JSON sessionToken
+            PGW->>DB: Lookup resolved token
+            DB-->>PGW: userId, username
+            PGW-->>User: 302 Redirect to /makePayment.do
+        else Auth Gateway unavailable or token invalid
+            AuthGW-->>PGW: error or no sessionToken
+            PGW-->>User: 200 login.jsp with error
+        end
+    end
+
+    Note over User,PGW: Workflow 2 - Payment Submission
+    User->>PGW: GET /makePayment.do
+    PGW->>DB: SELECT TOP 30 active accounts
+    DB-->>PGW: Account list
+    PGW-->>User: 200 payment.jsp with account dropdown
+    User->>PGW: POST /makePayment.do (accountId, amount, paymentType, memo)
+    Note over PGW: Validate: all fields present, amount > 0
+    alt Validation fails
+        PGW-->>User: 200 payment.jsp with validation error
+    else Validation passes
+        Note over PGW: Generate reference PGW-timestamp
+        Note over PGW: Resolve settlement account
+        PGW->>Ledger: POST /api/transactions (XML, timeout 8s)
+        alt Ledger returns POSTED
+            Ledger-->>PGW: 200 with status POSTED
+            PGW-->>User: 302 Redirect to /paymentHistory.do
+        else Ledger error or timeout
+            Ledger-->>PGW: non-200 or IOException
+            PGW-->>User: 200 payment.jsp with posting error
+        end
+    end
+
+    Note over User,PGW: Workflow 3 - Payment History
+    User->>PGW: GET /paymentHistory.do
+    PGW->>DB: SELECT TOP 75 transactions (ZavaPayGateway prefix)
+    DB-->>PGW: Transaction rows
+    PGW-->>User: 200 payment-history.jsp
+</div>
+<h2 id="business-rules-decision-logic">Business Rules & Decision Logic</h2>
+<h3 id="validation-rules">Validation Rules</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Rule</th><th>Location</th><th>Condition</th><th>Outcome on Failure</th>
+</tr></thead><tbody>
+<tr><td>Required fields</td><td><code>PaymentAction</code></td><td>Account ID, amount, and payment type must all be non-empty</td><td>Re-render form with "Please select an account, amount, and payment type."</td></tr>
+<tr><td>Positive amount</td><td><code>PaymentAction</code></td><td>Amount parsed as <code>BigDecimal</code> must be > 0</td><td>Re-render form with "Payment amount must be greater than zero."</td></tr>
+<tr><td>Numeric format</td><td><code>PaymentAction</code></td><td>Amount must be parseable as a decimal; account ID as an integer</td><td>Re-render form with "Amount or account format is invalid."</td></tr>
+<tr><td>Active session token</td><td><code>SsoSessionService</code></td><td>Token must exist in DB, <code>IsActive = 1</code>, <code>ExpiresAt > GETDATE()</code>, and user <code>IsActive = 1</code></td><td>Redirect to <code>/login.do</code></td></tr>
+</tbody></table></div>
+<h3 id="decision-logic">Decision Logic</h3>
+<ul>
+<li><strong>Settlement account avoidance</strong>: If the configured settlement account ID equals the user-selected debit account, the system picks account 2 as the settlement account (or account 1 if debit is account 2). This prevents a self-transfer.</li>
+<li><strong>Payment type encoding in Description</strong>: The <code>Description</code> field sent to the Ledger Service is formatted as <code>ZavaPayGateway:{paymentType}:{memo}</code>. On the history read, the payment type is parsed back out by splitting on <code>:</code>. This is the only coupling mechanism between the write path (Ledger) and the read path (ZavaPayGateway history query).</li>
+<li><strong>Ledger success detection</strong>: Payment is considered posted only if the Ledger Service returns HTTP 200 <strong>and</strong> the response body string-contains <code><status>POSTED</status></code>. Any other response is treated as failure.</li>
+</ul>
+<h3 id="state-transitions">State Transitions</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Entity</th><th>States</th><th>Transition Trigger</th>
+</tr></thead><tbody>
+<tr><td>SessionToken</td><td>Active → Expired</td><td>Time passes beyond <code>ExpiresAt</code> (managed by Auth Gateway / DB)</td></tr>
+<tr><td>Transaction</td><td>(none in ZavaPayGateway)</td><td>Ledger Service owns the transaction lifecycle; ZavaPayGateway only reads the resulting <code>Status</code> field</td></tr>
+</tbody></table></div>
+<h3 id="transaction-boundaries">Transaction Boundaries</h3>
+<p>No explicit transaction management (<code>@Transactional</code> or JDBC <code>setAutoCommit(false)</code>) is used. Each database query is a single auto-committed statement. There is no compensating transaction if the Ledger Service call succeeds but a subsequent DB read fails.</p>
+<h3 id="error-handling">Error Handling</h3>
+<ul>
+<li>All <code>SQLException</code> instances are <strong>silently swallowed</strong> (<code>catch (SQLException ignored)</code>). If a DB query fails, the account list or history list is returned empty with no error surfaced to the user.</li>
+<li>All <code>IOException</code> instances in <code>postToLedger</code> are silently swallowed; the method returns <code>false</code>, resulting in a user-visible "Unable to post payment" error.</li>
+<li>There is no structured logging, no error monitoring, and no alerting for any failure path.</li>
+</ul>
+<h3 id="authorization">Authorization</h3>
+<p>Session validation (<code>ensureUserSession</code>) is performed inline at the start of <code>PaymentAction.execute()</code> and <code>PaymentHistoryAction.execute()</code>. If the <code>HttpSession</code> contains a valid <code>SessionUser</code>, the user proceeds; otherwise they are redirected to login. There is no role-based access control; all authenticated users have equal access to all accounts shown in the dropdown.</p></div>
+</div>
+<div id="tab-deps" class="tab-panel">
+  <div class="fact-content"><h1 id="dependency-map">Dependency Map</h1>
+<p>ZavaPayGateway is a single-module Gradle Java project with 4 declared external dependencies covering the web framework, database driver, and servlet container contract.</p>
+<h2 id="dependencies">Dependencies</h2>
+<div class="mermaid">
+flowchart LR
+    App["ZavaPayGateway v1.0.0"]
+
+    subgraph Web["Web Frameworks"]
+        StrutsCore["Apache Struts Core 1.3.10"]
+        StrutsTaglib["Apache Struts Taglib 1.3.10"]
+    end
+
+    subgraph DB["Database / JDBC"]
+        MSSQLDriver["Microsoft JDBC Driver for SQL Server 12.8.1.jre8"]
+    end
+
+    subgraph Container["Container / Provided"]
+        ServletAPI["javax.servlet-api 3.1.0 (compileOnly)"]
+    end
+
+    App -->|"web framework"| Web
+    App -->|"data access"| DB
+    App -->|"servlet container"| Container
+</div>
+<h3 id="dependency-summary">Dependency Summary</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Category</th><th>Count</th><th>Key Libraries</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td>Web Frameworks</td><td>2</td><td>Apache Struts Core 1.3.10, Apache Struts Taglib 1.3.10</td><td>Legacy Struts 1 MVC framework; end-of-life since 2013</td></tr>
+<tr><td>Database / JDBC</td><td>1</td><td>Microsoft JDBC Driver for SQL Server 12.8.1.jre8</td><td>Modern JDBC driver; targets JRE 8</td></tr>
+<tr><td>Container / Provided</td><td>1</td><td>javax.servlet-api 3.1.0</td><td>Provided by servlet container at runtime (compileOnly scope)</td></tr>
+</tbody></table></div>
+<h3 id="version-compatibility-risks">Version & Compatibility Risks</h3>
+<p><strong>Apache Struts 1.3.10</strong> reached end-of-life in December 2013 and has not received security updates or feature additions since then. Multiple CVEs (including critical remote-code-execution vulnerabilities in the Struts 1 ecosystem) have been published over the years with no patches available. The <code>javax.servlet-api 3.1.0</code> is tied to the older <code>javax.*</code> namespace (Java EE 7 era), which was superseded by <code>jakarta.servlet-api</code> under Jakarta EE 9+; migrating to a modern servlet container (Tomcat 10+, Jetty 11+) will require a namespace migration. The Microsoft JDBC driver <code>12.8.1.jre8</code> is current but targets JRE 8, which itself is in paid-support-only territory for most distributions.</p>
+<h3 id="notable-observations">Notable Observations</h3>
+<ul>
+<li><strong>End-of-life web framework</strong>: Apache Struts 1 has been unsupported for over a decade. The entire MVC layer (Actions, ActionForms, struts-config.xml) must be rewritten to migrate to a supported framework (Spring MVC, Jakarta EE MVC, Quarkus, etc.).</li>
+<li><strong>Minimal dependency footprint</strong>: The application has only 4 declared dependencies with no logging, security, caching, or observability libraries. Cross-cutting concerns are handled through the servlet container or are absent, making cloud observability a gap that will need to be addressed during modernization.</li>
+<li><strong>No BOM or version catalog</strong>: Versions are hard-coded directly in <code>build.gradle</code> with no BOM import or Gradle version catalog, increasing the maintenance burden when updating dependencies.</li>
+<li><strong>javax vs. jakarta namespace split</strong>: Both the servlet API and Struts 1 use the old <code>javax.*</code> namespace. Any migration to Jakarta EE 9+ or Spring Boot 3+ will require a <code>javax</code> → <code>jakarta</code> package rename across all source files.</li>
+</ul>
+<h2 id="test-dependencies">Test Dependencies</h2>
+<p>No test-scoped dependencies are declared in <code>build.gradle</code>. There are no test source files in the repository.</p>
+<p>Total test-scope dependencies: 0</p>
+<p>No test framework is configured for this project. Adding a testing framework (e.g., JUnit 5 with Mockito) should be considered as part of any modernization effort to enable automated regression testing for the business logic being migrated.</p></div>
+</div>
+<div id="tab-data" class="tab-panel">
+  <div class="fact-content"><h1 id="data-architecture-persistence-layer">Data Architecture & Persistence Layer</h1>
+<p>ZavaPayGateway persists all data in a single Microsoft SQL Server database (<code>ZavaBankDB</code>) accessed exclusively through raw JDBC — there is no ORM framework, no schema migration tooling, and no caching layer.</p>
+<h2 id="database-configuration">Database Configuration</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service / Module</th><th>DB Type</th><th>Profile</th><th>Driver</th><th>Connection</th><th>Migration Tool</th>
+</tr></thead><tbody>
+<tr><td>ZavaPayGateway</td><td>Microsoft SQL Server</td><td>Single (no profiles)</td><td>mssql-jdbc 12.8.1.jre8 (loaded via <code>Class.forName</code>)</td><td><code>sqlserver:1433</code>, database <code>ZavaBankDB</code>, user <code>sa</code></td><td>None — schema is managed externally; the application only reads/writes pre-existing tables</td></tr>
+</tbody></table></div>
+<p>Connection pooling: None declared. Every operation calls <code>DriverManager.getConnection(...)</code> directly, opening a new physical connection per request. There is no HikariCP, DBCP, or other pool configured.</p>
+<p>Schema management: The application does not create or alter tables. DDL is expected to exist before deployment. No Flyway, Liquibase, or equivalent migration tool is present.</p>
+<h2 id="data-ownership-per-service">Data Ownership per Service</h2>
+<div class="table-wrap"><table><thead><tr>
+<th>Service</th><th>Tables Owned (Read/Write)</th><th>Tables Read-Only</th><th>ORM Framework</th><th>Caching</th><th>Notes</th>
+</tr></thead><tbody>
+<tr><td>ZavaPayGateway</td><td>Transactions (INSERT via Ledger), Accounts (SELECT)</td><td>SessionTokens, Users, AccountTypes</td><td>None — raw JDBC</td><td>None</td><td>Transactions are not written directly; they are submitted to the external Ledger Service via HTTP, which writes to the DB. ZavaPayGateway reads them back via SELECT on the <code>Transactions</code> table.</td></tr>
+</tbody></table></div>
+<h2 id="entity-model">Entity Model</h2>
+<p>> Note: The application uses no JPA/ORM entities. The ER diagram below reflects the database tables as inferred from the SQL queries in the source code.</p>
+<div class="mermaid">
+erDiagram
+    Users ||--o{ SessionTokens : "authenticates via"
+    AccountTypes ||--o{ Accounts : "classifies"
+    Accounts ||--o{ Transactions : "has"
+
+    Users {
+        int UserID PK
+        string Username
+        bit IsActive
+    }
+
+    SessionTokens {
+        int TokenID PK
+        int UserID FK
+        string Token
+        bit IsActive
+        datetime ExpiresAt
+    }
+
+    AccountTypes {
+        int AccountTypeID PK
+        string TypeName
+    }
+
+    Accounts {
+        int AccountID PK
+        int AccountTypeID FK
+        string AccountNumber
+        decimal Balance
+        string Status
+    }
+
+    Transactions {
+        long TransactionID PK
+        int AccountID FK
+        decimal Amount
+        string Description
+        string ReferenceNumber
+        datetime TransactionDate
+        string Status
+    }
+</div>
+<p><strong>Java read-model classes</strong> (not JPA entities — populated from <code>ResultSet</code>):</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Class</th><th>Source</th><th>Fields</th>
+</tr></thead><tbody>
+<tr><td><code>AccountOption</code></td><td><code>AccountOption.java</code></td><td><code>accountId</code>, <code>accountNumber</code>, <code>accountType</code>, <code>balance</code> (String)</td></tr>
+<tr><td><code>PaymentHistoryRecord</code></td><td><code>PaymentHistoryRecord.java</code></td><td><code>transactionId</code>, <code>accountNumber</code>, <code>amount</code>, <code>paymentType</code>, <code>referenceNumber</code>, <code>transactionDate</code>, <code>status</code></td></tr>
+<tr><td><code>SessionUser</code></td><td><code>SessionUser.java</code></td><td><code>userId</code>, <code>username</code></td></tr>
+</tbody></table></div>
+<p>None of these classes carry persistence annotations; they are plain mutable JavaBeans used as view-transfer objects.</p>
+<h2 id="key-repository-methods">Key Repository Methods</h2>
+<p>There are no repository interfaces or DAO classes. All data access is performed inline within Action classes using raw JDBC <code>PreparedStatement</code>. The table below documents the effective query methods:</p>
+<div class="table-wrap"><table><thead><tr>
+<th>Caller Class</th><th>Effective Operation</th><th>SQL Pattern</th><th>Purpose</th>
+</tr></thead><tbody>
+<tr><td><code>SsoSessionService</code></td><td><code>resolveSessionUser(request, token)</code></td><td><code>SELECT TOP 1 st.UserID, u.Username FROM SessionTokens st INNER JOIN Users u ON st.UserID = u.UserID WHERE st.Token = ? AND st.IsActive = 1 AND st.ExpiresAt > GETDATE() AND u.IsActive = 1</code></td><td>Resolves a session token string to an authenticated <code>SessionUser</code>; checks token validity and user active status</td></tr>
+<tr><td><code>PaymentAction</code></td><td><code>loadAccounts()</code></td><td><code>SELECT TOP 30 a.AccountID, a.AccountNumber, at.TypeName, a.Balance FROM Accounts a INNER JOIN AccountTypes at ON a.AccountTypeID = at.AccountTypeID WHERE a.Status = 'Active' ORDER BY a.AccountNumber</code></td><td>Loads active accounts for the payment form dropdown; returns top 30 by account number</td></tr>
+<tr><td><code>PaymentHistoryAction</code></td><td><code>readHistory()</code></td><td><code>SELECT TOP 75 t.TransactionID, a.AccountNumber, t.Amount, t.Description, t.ReferenceNumber, t.TransactionDate, t.Status FROM Transactions t INNER JOIN Accounts a ON t.AccountID = a.AccountID WHERE t.Description LIKE 'ZavaPayGateway:%' ORDER BY t.TransactionDate DESC</code></td><td>Reads the 75 most recent transactions that originated from ZavaPayGateway (identified by the <code>ZavaPayGateway:</code> prefix in <code>Description</code>)</td></tr>
+</tbody></table></div>
+<p>No <code>@Transactional</code> annotations or programmatic transaction management is used; each SQL operation is a single auto-committed statement.</p>
+<h2 id="caching-strategy">Caching Strategy</h2>
+<p>No caching layer is implemented. Every request that requires account data or transaction history executes a new database query over a new JDBC connection. There is no Spring Cache (<code>@Cacheable</code>), Redis, EhCache, or any in-memory caching provider configured.</p>
+<p>Additionally, account list results are not cached between page loads; the <code>loadAccounts()</code> query fires on every GET request to <code>/makePayment.do</code>.</p>
+<h2 id="data-ownership-boundaries">Data Ownership Boundaries</h2>
+<p><strong>Shared data store</strong>: ZavaPayGateway shares the <code>ZavaBankDB</code> SQL Server database with the external Ledger Service and the Auth Gateway. There is no logical separation (separate schemas, row-level security) between the services within the database. The application relies on the Ledger Service to write transaction records and then reads them back directly from the <code>Transactions</code> table, creating a tight coupling through the shared database.</p>
+<p><strong>Cross-service data access</strong>: ZavaPayGateway reads directly from tables owned by other services (<code>Transactions</code>, <code>SessionTokens</code>) without going through a service API. This shared-database anti-pattern means schema changes in any upstream service (Ledger, Auth Gateway) will break ZavaPayGateway without any API versioning contract.</p>
+<p><strong>Write patterns</strong>: ZavaPayGateway is predominantly read-only against the database. The only write path is indirect: a POST to <code>/makePayment.do</code> triggers an HTTP call to the Ledger Service, which writes to <code>Transactions</code>. ZavaPayGateway has no INSERT/UPDATE/DELETE statements in its own codebase.</p>
+<h3 id="data-classification-sensitivity">Data Classification & Sensitivity</h3>
+<div class="table-wrap"><table><thead><tr>
+<th>Table / Field</th><th>Sensitive Fields</th><th>Classification</th><th>Controls in Place</th>
+</tr></thead><tbody>
+<tr><td><code>Users</code></td><td><code>Username</code></td><td>PII (account identifier)</td><td>None — no encryption-at-rest, no masking</td></tr>
+<tr><td><code>SessionTokens</code></td><td><code>Token</code></td><td>Credentials / Security-sensitive</td><td>No hashing or encryption; tokens stored as plain-text strings; active token compromise grants full access</td></tr>
+<tr><td><code>Accounts</code></td><td><code>AccountNumber</code>, <code>Balance</code></td><td>PCI-adjacent (financial account data)</td><td>None — no field-level encryption, no masking in queries</td></tr>
+<tr><td><code>Transactions</code></td><td><code>Amount</code>, <code>ReferenceNumber</code></td><td>PCI-adjacent (financial transaction data)</td><td>None — no encryption-at-rest, no audit trail in the application layer</td></tr>
+<tr><td><code>paygateway.properties</code></td><td><code>db.password</code> (<code>Zava123!</code>)</td><td>Credentials</td><td>Hard-coded plaintext password in a committed properties file — critical security gap</td></tr>
+</tbody></table></div>
+<p><strong>Summary</strong>: Session tokens are stored as plain-text strings in the database with no hashing. Financial account numbers and balances are exposed in query results without masking. The database password is hard-coded in <code>paygateway.properties</code> which is committed to source control. No encryption-at-rest, no masking, and no field-level access controls are configured at the application layer.</p></div>
+</div>
+<p class="footer">Your feedback is invaluable &mdash; <a href="https://aka.ms/ghcp-appmod/feedback">Share feedback</a></p>
+<script>
+function toggleRow(rowId, triggerRow) {
+  var detail = document.getElementById(rowId);
+  var btn = document.getElementById('btn-' + rowId);
+  if (!detail) return;
+  var visible = detail.style.display !== 'none';
+  detail.style.display = visible ? 'none' : 'table-row';
+  if (btn) btn.classList.toggle('open', !visible);
+}
+(function() {
+  var nav = document.querySelector('.tab-nav');
+  if (!nav) return;
+  nav.addEventListener('click', function(e) {
+    var btn = e.target.closest('.tab-btn');
+    if (!btn) return;
+    var targetId = btn.getAttribute('data-tab');
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    var panel = document.getElementById(targetId);
+    if (panel) {
+      panel.classList.add('active');
+      if (window.__mermaidReady) { window.__renderMermaidIn(panel); }
+    }
+  });
+})();
+
+// ── Diagram lightbox ────────────────────────────────────────
+(function() {
+  var lightbox = document.getElementById('diagram-lightbox');
+  var inner = document.getElementById('diagram-lightbox-inner');
+  var closeBtn = document.getElementById('diagram-lightbox-close');
+  if (!lightbox || !inner || !closeBtn) return;
+
+  var scale = 1;
+  var translateX = 0;
+  var translateY = 0;
+  var isDragging = false;
+  var dragStartX = 0;
+  var dragStartY = 0;
+
+  function applyTransform() {
+    var svg = inner.querySelector('svg');
+    if (svg) {
+      svg.style.transform = 'translate(' + translateX + 'px, ' + translateY + 'px) scale(' + scale + ')';
+      svg.style.transformOrigin = 'center center';
+      svg.style.transition = 'none';
+    }
+  }
+
+  function resetTransform() {
+    scale = 1; translateX = 0; translateY = 0;
+    applyTransform();
+  }
+
+  function openLightbox(svgEl) {
+    inner.innerHTML = svgEl.outerHTML;
+    var injected = inner.querySelector('svg');
+    if (injected) {
+      injected.removeAttribute('width');
+      injected.removeAttribute('height');
+      injected.style.cursor = 'grab';
+    }
+    resetTransform();
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    inner.innerHTML = '';
+    document.body.style.overflow = '';
+    resetTransform();
+  }
+
+  inner.addEventListener('wheel', function(e) {
+    e.preventDefault();
+    var delta = e.deltaY > 0 ? 0.9 : 1.1;
+    scale = Math.min(Math.max(scale * delta, 0.3), 8);
+    applyTransform();
+  }, { passive: false });
+
+  inner.addEventListener('mousedown', function(e) {
+    if (e.button !== 0) return;
+    isDragging = true;
+    dragStartX = e.clientX - translateX;
+    dragStartY = e.clientY - translateY;
+    var svg = inner.querySelector('svg');
+    if (svg) { svg.style.cursor = 'grabbing'; }
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    translateX = e.clientX - dragStartX;
+    translateY = e.clientY - dragStartY;
+    applyTransform();
+  });
+
+  document.addEventListener('mouseup', function() {
+    if (!isDragging) return;
+    isDragging = false;
+    var svg = inner.querySelector('svg');
+    if (svg) { svg.style.cursor = 'grab'; }
+  });
+
+  inner.addEventListener('dblclick', function() { resetTransform(); });
+
+  document.addEventListener('click', function(e) {
+    var card = e.target.closest('.mermaid');
+    if (!card) return;
+    if (e.target.closest('.diagram-lightbox-close')) return;
+    var svg = card.querySelector('svg');
+    if (svg) { openLightbox(svg); }
+  });
+
+  closeBtn.addEventListener('click', closeLightbox);
+
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) { closeLightbox(); }
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { closeLightbox(); }
+  });
+})();
+
+var _currentTarget = '';
+
+function toggleMultiSelect(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  document.querySelectorAll('.multi-select.open').forEach(function(ms) { if (ms.id !== id) ms.classList.remove('open'); });
+  el.classList.toggle('open');
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.multi-select')) {
+    document.querySelectorAll('.multi-select.open').forEach(function(ms) { ms.classList.remove('open'); });
+  }
+});
+
+function getMultiSelectValues(msId) {
+  var el = document.getElementById(msId);
+  if (!el) return [];
+  var checked = el.querySelectorAll('input[type=checkbox]:checked');
+  var vals = [];
+  for (var i = 0; i < checked.length; i++) vals.push(checked[i].value);
+  return vals;
+}
+
+function onMultiSelectChange(msId, label) {
+  var el = document.getElementById(msId);
+  if (!el) return;
+  var vals = getMultiSelectValues(msId);
+  var total = el.querySelectorAll('input[type=checkbox]').length;
+  var btn = el.querySelector('.multi-select-btn');
+  if (btn) {
+    btn.textContent = vals.length > 0 && vals.length < total ? label + ' (' + vals.length + ')' : label;
+  }
+  applyFilters();
+}
+
+function applyFilters() {
+  var selectedDomains = getMultiSelectValues('domain-ms');
+  var selectedCrits = getMultiSelectValues('criticality-ms');
+
+  var sections = document.querySelectorAll('.issue-section');
+  for (var i = 0; i < sections.length; i++) {
+    var domain = sections[i].getAttribute('data-domain');
+    sections[i].style.display = (selectedDomains.length === 0 || selectedDomains.indexOf(domain) >= 0) ? '' : 'none';
+  }
+
+  var rows = document.querySelectorAll('.issue-row');
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var section = row.closest('.issue-section');
+    if (section && section.style.display === 'none') {
+      row.style.display = 'none';
+      var next = row.nextElementSibling;
+      if (next && next.classList.contains('detail-row')) next.style.display = 'none';
+      continue;
+    }
+
+    var show = true;
+    if (_currentTarget && row.hasAttribute('data-targets')) {
+      var targetsStr = row.getAttribute('data-targets');
+      if (targetsStr && targetsStr !== '{}') {
+        try {
+          var targets = JSON.parse(targetsStr);
+          if (Object.keys(targets).length > 0 && !targets[_currentTarget]) {
+            show = false;
+          }
+        } catch(e) {}
+      }
+    }
+
+    if (show && selectedCrits.length > 0) {
+      var crit = row.getAttribute('data-criticality');
+      if (selectedCrits.indexOf(crit) < 0) show = false;
+    }
+
+    row.style.display = show ? '' : 'none';
+    var nextRow = row.nextElementSibling;
+    if (nextRow && nextRow.classList.contains('detail-row')) {
+      if (!show) nextRow.style.display = 'none';
+    }
+  }
+}
+
+function clearAllFilters() {
+  document.querySelectorAll('.multi-select input[type=checkbox]').forEach(function(cb) { cb.checked = false; });
+  var domainBtn = document.querySelector('#domain-ms .multi-select-btn');
+  if (domainBtn) domainBtn.textContent = 'Domain';
+  var critBtn = document.querySelector('#criticality-ms .multi-select-btn');
+  if (critBtn) critBtn.textContent = 'Criticality';
+  applyFilters();
+}
+
+function onTargetChange(targetId) {
+  _currentTarget = targetId;
+  var rows = document.querySelectorAll('.issue-row[data-targets]');
+  var totalEffort = 0;
+  var domainCrits = {};
+
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var targets = JSON.parse(row.getAttribute('data-targets'));
+    var section = row.closest('.issue-section');
+    var domain = section ? section.getAttribute('data-domain') : '';
+
+    if (!targets || Object.keys(targets).length === 0) {
+      var sp = parseFloat(row.querySelector('.sp-cell').textContent) || 0;
+      totalEffort += sp;
+      if (!domainCrits[domain]) domainCrits[domain] = {mandatory:0,potential:0,optional:0};
+      var crit = row.getAttribute('data-criticality') || 'optional';
+      domainCrits[domain][crit] = (domainCrits[domain][crit] || 0) + 1;
+      continue;
+    }
+
+    var override = targets[targetId];
+    if (!override) {
+      continue;
+    }
+
+    var newSeverity = (override.severity || row.getAttribute('data-default-severity') || '').toLowerCase();
+    row.setAttribute('data-criticality', newSeverity);
+    var critCell = row.querySelector('.crit-cell');
+    if (critCell) {
+      var critText = newSeverity === 'mandatory' ? 'Mandatory' : newSeverity === 'potential' ? 'Potential' : 'Optional';
+      var cssClass = newSeverity === 'mandatory' ? 'crit-square-mandatory' : newSeverity === 'potential' ? 'crit-square-potential' : 'crit-square-optional';
+      critCell.innerHTML = '<span class="crit-label"><span class="crit-square ' + cssClass + '"></span>' + critText + '</span>';
+    }
+
+    var newEffort = override.effort !== undefined ? override.effort : parseFloat(row.getAttribute('data-default-effort')) || 0;
+    var spCell = row.querySelector('.sp-cell');
+    if (spCell) spCell.textContent = newEffort;
+    totalEffort += newEffort;
+
+    if (!domainCrits[domain]) domainCrits[domain] = {mandatory:0,potential:0,optional:0};
+    domainCrits[domain][newSeverity] = (domainCrits[domain][newSeverity] || 0) + 1;
+  }
+
+  var secSection = document.querySelector('.issue-section[data-domain="security"]');
+  if (secSection) {
+    var secRows = secSection.querySelectorAll('.issue-row');
+    for (var j = 0; j < secRows.length; j++) {
+      if (!secRows[j].hasAttribute('data-targets') || secRows[j].getAttribute('data-targets') === '') {
+        var sp = parseFloat(secRows[j].querySelector('.sp-cell').textContent) || 0;
+        totalEffort += sp;
+        if (!domainCrits['security']) domainCrits['security'] = {mandatory:0,potential:0,optional:0};
+        var sc = secRows[j].getAttribute('data-criticality') || 'optional';
+        domainCrits['security'][sc] = (domainCrits['security'][sc] || 0) + 1;
+      }
+    }
+  }
+
+  var label = totalEffort < 20 ? 'S' : totalEffort < 50 ? 'M' : totalEffort < 100 ? 'L' : 'XL';
+  var effortEl = document.getElementById('effort-display');
+  if (effortEl) effortEl.textContent = label + ' (total story points: ' + totalEffort + ')';
+
+  updateDonuts(domainCrits);
+  applyFilters();
+}
+
+function updateDonuts(domainCrits) {
+  var container = document.getElementById('donut-container');
+  if (!container) return;
+  container.innerHTML = '';
+  var domainNames = {'cloud-readiness':'Cloud Readiness','java-upgrade':'Java Upgrade','dotnet-upgrade':'DotNET Upgrade','security':'Security'};
+  var domainOrder = ['cloud-readiness','java-upgrade','dotnet-upgrade','security'];
+  for (var d = 0; d < domainOrder.length; d++) {
+    var key = domainOrder[d];
+    var c = domainCrits[key];
+    if (!c || (c.mandatory + c.potential + c.optional) === 0) continue;
+    var total = c.mandatory + c.potential + c.optional;
+    var div = document.createElement('div');
+    div.className = 'domain-summary-item';
+    div.innerHTML = buildDonutSvg(c.mandatory, c.potential, c.optional) +
+      '<h3>' + domainNames[key] + '</h3>' +
+      '<div class="count">' + total + ' issue' + (total !== 1 ? 's' : '') + '</div>';
+    container.appendChild(div);
+  }
+}
+
+function buildDonutSvg(m, p, o) {
+  var total = m + p + o;
+  if (total === 0) return '<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto;"><circle cx="50" cy="50" r="35" fill="none" stroke="#d0d7de" stroke-width="15" opacity="0.5"/></svg>';
+  var r = 35, circ = 2 * Math.PI * r, offset = 0;
+  var svg = '<svg viewBox="0 0 100 100" width="100" height="100" style="display:block;margin:0 auto;transform:rotate(-90deg);">';
+  var segs = [{c:m,color:'var(--color-mandatory)'},{c:p,color:'var(--color-potential)'},{c:o,color:'var(--color-optional)'}];
+  for (var i = 0; i < segs.length; i++) {
+    if (segs[i].c === 0) continue;
+    var segLen = (segs[i].c / total) * circ;
+    var gap = total > segs[i].c ? 1.5 : 0;
+    var drawLen = Math.max(segLen - gap, 0.5);
+    svg += '<circle cx="50" cy="50" r="' + r + '" fill="none" stroke="' + segs[i].color + '" stroke-width="15" stroke-dasharray="' + drawLen.toFixed(2) + ' ' + circ.toFixed(2) + '" stroke-dashoffset="' + (-offset).toFixed(2) + '"/>';
+    offset += segLen;
+  }
+  svg += '</svg>';
+  return svg;
+}
+</script>
+<script>document.addEventListener('DOMContentLoaded', function() { onTargetChange('azure-appservice'); });</script>
+</div></body></html>
