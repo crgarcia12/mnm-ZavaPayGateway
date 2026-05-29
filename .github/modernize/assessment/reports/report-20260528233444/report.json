@@ -1,0 +1,158 @@
+{
+  "metadata": {
+    "id": "20260528233444",
+    "generated_at": "2026-05-28T23:34:44.0000000Z",
+    "note": "Security-only report (AppCAT was not run or failed)"
+  },
+  "security": [
+    {
+      "id": "CVE-2023-34396",
+      "title": "Apache Struts vulnerable to memory exhaustion",
+      "category": "CVE",
+      "severity": "mandatory",
+      "description": "[CVE-2023-34396](https://github.com/advisories/GHSA-4g42-gqrg-4633): Apache Struts vulnerable to memory exhaustion\n\nSeverity: HIGH\n\nAffected dependencies:\n  - org.apache.struts:struts-core:1.3.10 (declared at build.gradle:18), vulnerable range `<= 1.3.10`\n\nRecommended fix: upgrade from Struts 1.x to a supported framework/version because no patched Struts 1 version is provided.",
+      "evidence": {
+        "files": [
+          "build.gradle:18"
+        ],
+        "explanation": "[CVE-2023-34396](https://github.com/advisories/GHSA-4g42-gqrg-4633): Apache Struts vulnerable to memory exhaustion\n\nSeverity: HIGH\n\nAffected dependencies:\n  - org.apache.struts:struts-core:1.3.10 (declared at build.gradle:18), vulnerable range `<= 1.3.10`\n\nRecommended fix: upgrade from Struts 1.x to a supported framework/version because no patched Struts 1 version is provided."
+      },
+      "storyPoint": 1
+    },
+    {
+      "id": "CVE-2015-0899",
+      "title": "Improper Input Validation in Apache Struts",
+      "category": "CVE",
+      "severity": "mandatory",
+      "description": "[CVE-2015-0899](https://github.com/advisories/GHSA-cvvx-r33m-v7pq): Improper Input Validation in Apache Struts\n\nSeverity: HIGH\n\nAffected dependencies:\n  - org.apache.struts:struts-core:1.3.10 (declared at build.gradle:18), vulnerable range `>= 1.1, <= 1.3.10`\n\nRecommended fix: upgrade from Struts 1.x to a supported framework/version because no patched Struts 1 version is provided.",
+      "evidence": {
+        "files": [
+          "build.gradle:18"
+        ],
+        "explanation": "[CVE-2015-0899](https://github.com/advisories/GHSA-cvvx-r33m-v7pq): Improper Input Validation in Apache Struts\n\nSeverity: HIGH\n\nAffected dependencies:\n  - org.apache.struts:struts-core:1.3.10 (declared at build.gradle:18), vulnerable range `>= 1.1, <= 1.3.10`\n\nRecommended fix: upgrade from Struts 1.x to a supported framework/version because no patched Struts 1 version is provided."
+      },
+      "storyPoint": 1
+    },
+    {
+      "id": "CVE-2016-1181",
+      "title": "Improper Input Validation in Apache Struts",
+      "category": "CVE",
+      "severity": "mandatory",
+      "description": "[CVE-2016-1181](https://github.com/advisories/GHSA-7jw3-5q4w-89qg): Improper Input Validation in Apache Struts\n\nSeverity: HIGH\n\nAffected dependencies:\n  - org.apache.struts:struts-core:1.3.10 (declared at build.gradle:18), vulnerable range `<= 1.3.10`\n\nRecommended fix: upgrade from Struts 1.x to a supported framework/version because no patched Struts 1 version is provided.",
+      "evidence": {
+        "files": [
+          "build.gradle:18"
+        ],
+        "explanation": "[CVE-2016-1181](https://github.com/advisories/GHSA-7jw3-5q4w-89qg): Improper Input Validation in Apache Struts\n\nSeverity: HIGH\n\nAffected dependencies:\n  - org.apache.struts:struts-core:1.3.10 (declared at build.gradle:18), vulnerable range `<= 1.3.10`\n\nRecommended fix: upgrade from Struts 1.x to a supported framework/version because no patched Struts 1 version is provided."
+      },
+      "storyPoint": 1
+    },
+    {
+      "id": "CVE-2016-1182",
+      "title": "Improper Input Validation in Apache Struts",
+      "category": "CVE",
+      "severity": "mandatory",
+      "description": "[CVE-2016-1182](https://github.com/advisories/GHSA-5ggr-mpgw-3mgx): Improper Input Validation in Apache Struts\n\nSeverity: HIGH\n\nAffected dependencies:\n  - org.apache.struts:struts-core:1.3.10 (declared at build.gradle:18), vulnerable range `<= 1.3.10`\n\nRecommended fix: upgrade from Struts 1.x to a supported framework/version because no patched Struts 1 version is provided.",
+      "evidence": {
+        "files": [
+          "build.gradle:18"
+        ],
+        "explanation": "[CVE-2016-1182](https://github.com/advisories/GHSA-5ggr-mpgw-3mgx): Improper Input Validation in Apache Struts\n\nSeverity: HIGH\n\nAffected dependencies:\n  - org.apache.struts:struts-core:1.3.10 (declared at build.gradle:18), vulnerable range `<= 1.3.10`\n\nRecommended fix: upgrade from Struts 1.x to a supported framework/version because no patched Struts 1 version is provided."
+      },
+      "storyPoint": 1
+    },
+    {
+      "id": "CWE-567",
+      "title": "Unsynchronized Access to Shared Data in a Multithreaded Context",
+      "category": "Concurrency & Synchronization",
+      "severity": "potential",
+      "description": "The product does not properly synchronize shared data, such as static variables across threads, which can lead to undefined behavior and unpredictable data changes.",
+      "evidence": {
+        "files": [
+          "src/main/java/com/zavabank/paygateway/PaymentAction.java:25",
+          "src/main/java/com/zavabank/paygateway/PaymentHistoryAction.java:18"
+        ],
+        "explanation": "Static formatter instances (DecimalFormat/SimpleDateFormat) are shared across requests in Struts Action singletons without synchronization. These mutable classes are not thread-safe and are used concurrently in execute/readHistory paths."
+      },
+      "storyPoint": 5
+    },
+    {
+      "id": "CWE-820",
+      "title": "Missing Synchronization",
+      "category": "Concurrency & Synchronization",
+      "severity": "potential",
+      "description": "The product utilizes a shared resource in a concurrent manner but does not attempt to synchronize access to the resource.",
+      "evidence": {
+        "files": [
+          "src/main/java/com/zavabank/paygateway/PaymentAction.java:25",
+          "src/main/java/com/zavabank/paygateway/PaymentHistoryAction.java:18"
+        ],
+        "explanation": "Static formatter instances (DecimalFormat/SimpleDateFormat) are shared across requests in Struts Action singletons without synchronization. These mutable classes are not thread-safe and are used concurrently in execute/readHistory paths."
+      },
+      "storyPoint": 8
+    },
+    {
+      "id": "CWE-259",
+      "title": "Use of Hard-coded Password",
+      "category": "Credentials & Secrets",
+      "severity": "optional",
+      "description": "The product contains a hard-coded password, which it uses for its own inbound authentication or for outbound communication to external components.",
+      "evidence": {
+        "files": [
+          "src/main/resources/paygateway.properties:5"
+        ],
+        "explanation": "Configuration file contains hard-coded database password `db.****** in paygateway.properties line 5, which is used for outbound database authentication via PayGatewayConfig.getDbPassword()."
+      },
+      "storyPoint": 5
+    },
+    {
+      "id": "CWE-798",
+      "title": "Use of Hard-coded Credentials",
+      "category": "Credentials & Secrets",
+      "severity": "optional",
+      "description": "The product contains hard-coded credentials, such as a password or cryptographic key.",
+      "evidence": {
+        "files": [
+          "src/main/resources/paygateway.properties:4",
+          "src/main/resources/paygateway.properties:5"
+        ],
+        "explanation": "Configuration contains hard-coded database credentials (`db.user=sa`, `db.****** used by PayGatewayConfig and PayGatewayConnectionFactory for database authentication."
+      },
+      "storyPoint": 5
+    },
+    {
+      "id": "CWE-79",
+      "title": "Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
+      "category": "Injection Attacks",
+      "severity": "optional",
+      "description": "The product does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users.",
+      "evidence": {
+        "files": [
+          "src/main/webapp/WEB-INF/jsp/payment.jsp:12",
+          "src/main/webapp/WEB-INF/jsp/login.jsp:23"
+        ],
+        "explanation": "JSP scriptlets render request attributes directly using <%= ... %> without output encoding. In payment.jsp line 12, username is output directly; in login.jsp line 23, loginError is output directly. User/attribute values flowing into these attributes can execute script content in the browser."
+      },
+      "storyPoint": 8
+    }
+  ],
+  "rules": {},
+  "projects": [
+    {
+      "properties": {
+        "repo": "mnm-ZavaPayGateway",
+        "appName": "mnm-ZavaPayGateway",
+        "languages": [
+          "Java"
+        ],
+        "frameworks": [
+          "Apache Struts 1.x"
+        ],
+        "tools": [
+          "Gradle"
+        ]
+      },
+      "incidents": []
+    }
+  ]
+}
