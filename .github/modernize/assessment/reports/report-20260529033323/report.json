@@ -1,0 +1,24 @@
+{
+  "metadata": {
+    "analysisStartTime": "2026-05-29T03:33:23Z",
+    "toolVersion": "N/A",
+    "targetIds": ["azure-appservice", "azure-aks", "azure-container-apps"],
+    "targetDisplayNames": ["Azure App Service", "Azure Kubernetes Service", "Azure Container Apps"]
+  },
+  "rules": {},
+  "projects": [
+    {
+      "properties": {
+        "repo": "mnm-ZavaPayGateway",
+        "appName": "ZavaPayGateway",
+        "languages": ["Java"],
+        "frameworks": ["Apache Struts 1.3"],
+        "tools": ["Gradle"],
+        "jdkVersion": "Java 8"
+      },
+      "incidents": []
+    }
+  ],
+  "security": [],
+  "rearchitect": []
+}
