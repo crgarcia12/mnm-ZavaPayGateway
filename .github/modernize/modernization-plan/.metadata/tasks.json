@@ -1,0 +1,53 @@
+[
+  {
+    "id": "001-setupBaseline",
+    "title": "Establish Java gateway modernization baseline",
+    "description": "Document current gateway architecture, dependencies, runtime constraints, and operational baseline to prepare for Azure modernization.",
+    "type": "setupBaseline",
+    "requirements": "Inventory runtime, dependencies, external integrations, configuration model, and baseline build/test behavior for migration planning.",
+    "estimatedHours": 4,
+    "sequence": 1,
+    "dependencies": [],
+    "validationCommand": "gradle test"
+  },
+  {
+    "id": "002-transform",
+    "title": "Transform gateway integration points for Azure",
+    "description": "Update application configuration and integration boundaries so the Java gateway can align with Azure-native service endpoints and cloud configuration patterns.",
+    "type": "transform",
+    "requirements": "Externalize configuration, parameterize endpoints/secrets access, and adapt service integration abstractions required for Azure-targeted operation.",
+    "estimatedHours": 8,
+    "sequence": 2,
+    "dependencies": [
+      "001-setupBaseline"
+    ],
+    "service": "Application integration",
+    "source": "Current gateway-hosted integrations",
+    "target": "Azure-aligned integration model"
+  },
+  {
+    "id": "003-security",
+    "title": "Run security remediation and compliance hardening",
+    "description": "Perform CVE-focused dependency remediation and harden configuration/secrets handling for secure Azure operation.",
+    "type": "security",
+    "requirements": "Scan dependencies for CVEs, remediate findings, enforce secure secret management using Azure Key Vault patterns, and validate RBAC/security defaults.",
+    "estimatedHours": 6,
+    "sequence": 3,
+    "dependencies": [
+      "002-transform"
+    ]
+  },
+  {
+    "id": "004-deployment",
+    "title": "Deploy modernized gateway to Azure Container Apps",
+    "description": "Build and deploy the modernized Java gateway to Azure Container Apps with rollout validation and rollback readiness.",
+    "type": "deployment",
+    "requirements": "Containerize/build release artifact, deploy to Azure Container Apps, configure runtime settings and health checks, and validate smoke-level deployment behavior.",
+    "estimatedHours": 6,
+    "sequence": 4,
+    "dependencies": [
+      "003-security"
+    ],
+    "target": "Azure Container Apps"
+  }
+]
