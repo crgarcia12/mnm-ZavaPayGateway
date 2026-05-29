@@ -1,0 +1,73 @@
+{
+  "metadata": {
+    "analysisStartTime": "2026-05-29T03:55:03Z",
+    "assessmentTool": "AppCAT",
+    "projectName": "mnm-ZavaPayGateway"
+  },
+  "rules": {},
+  "projects": [
+    {
+      "properties": {
+        "repo": "mnm-ZavaPayGateway",
+        "languages": [
+          "Java"
+        ],
+        "frameworks": [
+          "Apache Struts 1.3",
+          "Servlet 3.1"
+        ],
+        "tools": [
+          "Gradle",
+          "WAR packaging"
+        ],
+        "applicationType": "Web Application"
+      },
+      "incidents": []
+    }
+  ],
+  "security": [
+    {
+      "id": "CWE-259",
+      "title": "Use of Hard-coded Password",
+      "category": "Credentials & Secrets",
+      "severity": "optional",
+      "description": "The product contains a hard-coded password, which it uses for its own inbound authentication or for outbound communication to external components.",
+      "evidence": {
+        "files": [
+          "src/main/resources/paygateway.properties"
+        ],
+        "explanation": "`paygateway.properties` defines `db.****** a plaintext hard-coded password used for outbound SQL Server authentication."
+      },
+      "storyPoint": 5
+    },
+    {
+      "id": "CWE-798",
+      "title": "Use of Hard-coded Credentials",
+      "category": "Credentials & Secrets",
+      "severity": "optional",
+      "description": "The product contains hard-coded credentials, such as a password or cryptographic key.",
+      "evidence": {
+        "files": [
+          "src/main/resources/paygateway.properties"
+        ],
+        "explanation": "Static credential material (`db.user=sa`, `db.****** is stored in repository configuration and read by `PayGatewayConfig`, creating hard-coded outbound database credentials."
+      },
+      "storyPoint": 5
+    },
+    {
+      "id": "CWE-79",
+      "title": "Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
+      "category": "Injection Attacks",
+      "severity": "optional",
+      "description": "The product does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users.",
+      "evidence": {
+        "files": [
+          "src/main/webapp/WEB-INF/jsp/payment.jsp",
+          "src/main/webapp/WEB-INF/jsp/payment-history.jsp"
+        ],
+        "explanation": "JSP scriptlet expressions render request attribute values directly using `<%= ... %>` in payment and history headers (`username`, `statusMessage`, `statusError`) without output encoding, enabling reflected/stored XSS when upstream values are attacker-controlled."
+      },
+      "storyPoint": 8
+    }
+  ]
+}
