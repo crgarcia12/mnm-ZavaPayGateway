@@ -1,0 +1,60 @@
+{
+  "GeneratedAt": "2026-05-29T04:02:19.0000000Z",
+  "ProjectPath": ".",
+  "Summary": {
+    "TotalFindings": 3,
+    "CveCount": 0,
+    "CweCount": 3,
+    "BySeverity": {
+      "mandatory": 0,
+      "optional": 3,
+      "potential": 0
+    },
+    "ByCategory": {
+      "Credentials & Secrets": 2,
+      "Injection Attacks": 1
+    },
+    "TotalRulesAssessed": 59,
+    "RulesPassed": 56
+  },
+  "CveFindings": [],
+  "CweFindings": [
+    {
+      "Id": "CWE-259",
+      "Name": "Use of Hard-coded Password",
+      "Category": "Credentials & Secrets",
+      "Severity": "optional",
+      "StoryPoint": 5,
+      "Description": "The product contains a hard-coded password, which it uses for its own inbound authentication or for outbound communication to external components.",
+      "Files": [
+        "src/main/resources/paygateway.properties"
+      ],
+      "Explanation": "`paygateway.properties` defines `db.****** a plaintext hard-coded password used for outbound SQL Server authentication."
+    },
+    {
+      "Id": "CWE-798",
+      "Name": "Use of Hard-coded Credentials",
+      "Category": "Credentials & Secrets",
+      "Severity": "optional",
+      "StoryPoint": 5,
+      "Description": "The product contains hard-coded credentials, such as a password or cryptographic key.",
+      "Files": [
+        "src/main/resources/paygateway.properties"
+      ],
+      "Explanation": "Static credential material (`db.user=sa`, `db.****** is stored in repository configuration and read by `PayGatewayConfig`, creating hard-coded outbound database credentials."
+    },
+    {
+      "Id": "CWE-79",
+      "Name": "Improper Neutralization of Input During Web Page Generation ('Cross-site Scripting')",
+      "Category": "Injection Attacks",
+      "Severity": "optional",
+      "StoryPoint": 8,
+      "Description": "The product does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users.",
+      "Files": [
+        "src/main/webapp/WEB-INF/jsp/payment.jsp",
+        "src/main/webapp/WEB-INF/jsp/payment-history.jsp"
+      ],
+      "Explanation": "JSP scriptlet expressions render request attribute values directly using `<%= ... %>` in payment and history headers (`username`, `statusMessage`, `statusError`) without output encoding, enabling reflected/stored XSS when upstream values are attacker-controlled."
+    }
+  ]
+}
